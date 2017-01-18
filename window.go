@@ -50,6 +50,8 @@ func CreateWindow() *Window {
 		version := gl.GoStr(gl.GetString(gl.VERSION))
 		fmt.Println("OpenGL version", version)
 
+		gl.ClearColor(0, 1, 1, 1)
+
 		window.s = createShader(vertexShader, fragmentShader)
 	})
 
@@ -131,6 +133,6 @@ var fragmentShader = `
 #version 330
 out vec4 outputColor;
 void main() {
-    outputColor = vec4(1, 1, 1, 1);
+    outputColor = vec4(1, 0, 1, 1);
 }
 ` + "\x00"

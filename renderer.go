@@ -6,8 +6,6 @@
 package graphics
 
 import (
-	"strconv"
-
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
@@ -19,6 +17,8 @@ type Renderer struct {
 	indexBuffer  uint32
 	s            *shader
 }
+
+const int32size int32 = 4
 
 // CreateRenderer used to create a renderer object correctly.
 func CreateRenderer(s *shader) *Renderer {
@@ -35,13 +35,14 @@ func CreateRenderer(s *shader) *Renderer {
 		checkGLError()
 		gl.BindBuffer(gl.ARRAY_BUFFER, r.vertexBuffer)
 		checkGLError()
-		gl.BufferData(gl.ARRAY_BUFFER, 2000*4*3*4, nil, gl.DYNAMIC_DRAW)
+		gl.BufferData(gl.ARRAY_BUFFER, (int)(2000*4*3*int32size), nil, gl.DYNAMIC_DRAW)
 		checkGLError()
 
 		vertAttrib := r.s.getAttributeLocation("vertex")
+		logger.Info("Vertex attribute location: ", vertAttrib)
 		gl.EnableVertexAttribArray(vertAttrib)
 		checkGLError()
-		gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+		gl.VertexAttribPointer(vertAttrib, 3, gl.INT, false, 3*int32size, gl.PtrOffset(0))
 		checkGLError()
 
 		gl.GenBuffers(1, &r.indexBuffer)
@@ -61,7 +62,7 @@ func CreateRenderer(s *shader) *Renderer {
 			j += 4
 		}
 
-		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 12000*4, gl.Ptr(&indices[0]), gl.DYNAMIC_DRAW)
+		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, (int)(12000*int32size), gl.Ptr(&indices[0]), gl.DYNAMIC_DRAW)
 		checkGLError()
 
 		gl.BindFragDataLocation((uint32)(*r.s), 0, gl.Str("outputColor\x00"))
@@ -90,7 +91,7 @@ func (r *Renderer) DrawRectangle(x, y, w, h int32) {
 		x + w, y + h, 0,
 	}
 	do(func() {
-		gl.BufferSubData(gl.ARRAY_BUFFER, (int)(r.offset*4*4), 4*strconv.IntSize, gl.Ptr(&array[0]))
+		gl.BufferSubData(gl.ARRAY_BUFFER, (int)(r.offset*12*int32size), (int)(12*int32size), gl.Ptr(&array[0]))
 		checkGLError()
 	})
 	r.offset++
