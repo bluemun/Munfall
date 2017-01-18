@@ -122,16 +122,16 @@ func (w *Window) PollEvents() {
 }
 
 var vertexShader = `
-#version 330
-in vec3 vertex;
+#version 130
+in highp vec3 vertex;
 void main() {
     gl_Position = vec4(vertex, 1);
 }
 ` + "\x00"
 
 var fragmentShader = `
-#version 330
-out vec4 outputColor;
+#version 130
+out highp vec4 outputColor;
 void main() {
     outputColor = vec4(1, 0, 1, 1);
 }
