@@ -1,74 +1,123 @@
-// bluemoon-graphics project bluemoon-graphics.go
+// Copyright 2017 The bluemun Authors. All rights reserved.
+// Use of this source code is governed by a MIT License
+// license that can be found in the LICENSE file.
+
+// Package graphics renderer.go Defines a renderer in the graphics package.
 package graphics
 
 import (
 	"strconv"
-	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
-type renderer struct {
+// Renderer used by the graphics library to draw.
+type Renderer struct {
 	offset       int32
-	vertexBuffer *uint32
-	indexBuffer  *uint32
+	vertexArray  uint32
+	vertexBuffer uint32
+	indexBuffer  uint32
+	s            *shader
 }
 
-func CreateRenderer() *renderer {
-	r := new(renderer)
+// CreateRenderer used to create a renderer object correctly.
+func CreateRenderer(s *shader) *Renderer {
+	r := new(Renderer)
+	r.s = s
+	do(func() {
+		r.s.use()
+		gl.GenVertexArrays(1, &r.vertexArray)
+		checkGLError()
+		gl.BindVertexArray(r.vertexArray)
+		checkGLError()
 
-	gl.GenBuffers(1, r.vertexBuffer)
-	gl.BindBuffer(gl.ARRAY_BUFFER, *r.vertexBuffer)
-	gl.BufferData(gl.ARRAY_BUFFER, 2000*4*3*strconv.IntSize, nil, gl.DYNAMIC_DRAW)
+		gl.GenBuffers(1, &r.vertexBuffer)
+		checkGLError()
+		gl.BindBuffer(gl.ARRAY_BUFFER, r.vertexBuffer)
+		checkGLError()
+		gl.BufferData(gl.ARRAY_BUFFER, 2000*4*3*4, nil, gl.DYNAMIC_DRAW)
+		checkGLError()
 
-	gl.GenBuffers(1, r.vertexBuffer)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, *r.indexBuffer)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 2000*6*strconv.IntSize, nil, gl.DYNAMIC_DRAW)
+		vertAttrib := r.s.getAttributeLocation("vertex")
+		gl.EnableVertexAttribArray(vertAttrib)
+		checkGLError()
+		gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, 3*4, gl.PtrOffset(0))
+		checkGLError()
 
-	pointer := gl.MapBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.WRITE_ONLY)
+		gl.GenBuffers(1, &r.indexBuffer)
+		checkGLError()
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
+		checkGLError()
 
-	var j uint = 0
-	for i := 0; i < 12000; i += 6 {
-		*(*uint)(unsafe.Pointer(uintptr(pointer) + uintptr(i*strconv.IntSize))) = j
-		*(*uint)(unsafe.Pointer(uintptr(pointer) + uintptr((i+1)*strconv.IntSize))) = j + 1
-		*(*uint)(unsafe.Pointer(uintptr(pointer) + uintptr((i+2)*strconv.IntSize))) = j + 2
-		*(*uint)(unsafe.Pointer(uintptr(pointer) + uintptr((i+3)*strconv.IntSize))) = j + 1
-		*(*uint)(unsafe.Pointer(uintptr(pointer) + uintptr((i+4)*strconv.IntSize))) = j + 2
-		*(*uint)(unsafe.Pointer(uintptr(pointer) + uintptr((i+5)*strconv.IntSize))) = j + 3
-		j += 4
-	}
+		var indices [12000]uint32
+		var j uint32
+		for i := 0; i < 12000; i += 6 {
+			indices[i] = j
+			indices[i+1] = j + 1
+			indices[i+2] = j + 2
+			indices[i+3] = j + 1
+			indices[i+4] = j + 2
+			indices[i+5] = j + 3
+			j += 4
+		}
 
-	gl.UnmapBuffer(gl.ELEMENT_ARRAY_BUFFER)
+		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, 12000*4, gl.Ptr(&indices[0]), gl.DYNAMIC_DRAW)
+		checkGLError()
+
+		gl.BindFragDataLocation((uint32)(*r.s), 0, gl.Str("outputColor\x00"))
+		checkGLError()
+	})
 
 	return r
 }
 
-func (r *renderer) Begin() {
+// Begin starts the rendering procedure.
+func (r *Renderer) Begin() {
 	r.offset = 0
-	gl.BindBuffer(gl.ARRAY_BUFFER, *r.vertexBuffer)
+	do(func() {
+		r.s.use()
+		gl.BindBuffer(gl.ARRAY_BUFFER, r.vertexBuffer)
+		checkGLError()
+	})
 }
 
-func (r *renderer) DrawRectangle(x, y, w, h int) {
-	array := [12]int{
+// DrawRectangle draws a rectangle using the given values, x and y point to the top-left corner.
+func (r *Renderer) DrawRectangle(x, y, w, h int32) {
+	array := [12]int32{
 		x, y, 0,
 		x + w, y, 0,
 		x, y + h, 0,
 		x + w, y + h, 0,
 	}
-	gl.BufferSubData(gl.ARRAY_BUFFER, (int)(r.offset*4*strconv.IntSize), 4*strconv.IntSize, unsafe.Pointer(&array))
-	r.offset += 1
+	do(func() {
+		gl.BufferSubData(gl.ARRAY_BUFFER, (int)(r.offset*4*4), 4*strconv.IntSize, gl.Ptr(&array[0]))
+		checkGLError()
+	})
+	r.offset++
 	if r.offset == 2000 {
 		r.Flush()
 		r.offset = 0
 	}
 }
 
-func (r *renderer) Flush() {
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, *r.indexBuffer)
-	gl.DrawElements(gl.TRIANGLES, r.offset*6, gl.UNSIGNED_INT, nil)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
+// Flush flushes all the draw calls that have been called on this renderer to the window
+func (r *Renderer) Flush() {
+	do(func() {
+		gl.BindVertexArray(r.vertexArray)
+		checkGLError()
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
+		checkGLError()
+		gl.DrawElements(gl.TRIANGLES, r.offset*6, gl.UNSIGNED_INT, nil)
+		checkGLError()
+		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
+		checkGLError()
+	})
 }
 
-func (r *renderer) End() {
-	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+// End ends the rendering procedure.
+func (r *Renderer) End() {
+	do(func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+		checkGLError()
+	})
 }

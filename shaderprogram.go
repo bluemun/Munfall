@@ -1,3 +1,9 @@
+// Copyright 2017 The bluemun Authors. All rights reserved.
+// Use of this source code is governed by a MIT License
+// license that can be found in the LICENSE file.
+
+// Package graphics shaderprogram.go Defines a shader type that
+// will be used by opengl.
 package graphics
 
 import (
@@ -9,18 +15,22 @@ import (
 
 type shader uint32
 
-func createShader(vertexShaderSource, fragmentShaderSource string) (*shader, error) {
+func createShader(vertexShaderSource, fragmentShaderSource string) *shader {
+	var program uint32
+
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
-		return nil, err
+		logger.Critical("Failed to compile vertex shader: ", err)
+		return nil
 	}
 
 	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
 	if err != nil {
-		return nil, err
+		logger.Critical("Failed to compile fragment shader: ", err)
+		return nil
 	}
 
-	program := gl.CreateProgram()
+	program = gl.CreateProgram()
 
 	gl.AttachShader(program, vertexShader)
 	gl.AttachShader(program, fragmentShader)
@@ -35,14 +45,15 @@ func createShader(vertexShaderSource, fragmentShaderSource string) (*shader, err
 		log := strings.Repeat("\x00", int(logLength+1))
 		gl.GetProgramInfoLog(program, logLength, nil, gl.Str(log))
 
-		return nil, fmt.Errorf("failed to link program: %v", log)
+		logger.Critical("Failed to link shader program: ", err)
+		return nil
 	}
 
 	gl.DeleteShader(vertexShader)
 	gl.DeleteShader(fragmentShader)
 
-	var s shader = (shader)(program)
-	return &s, nil
+	var s = (shader)(program)
+	return &s
 }
 
 func compileShader(source string, shaderType uint32) (uint32, error) {
@@ -70,4 +81,10 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 
 func (s *shader) use() {
 	gl.UseProgram((uint32)(*s))
+	checkGLError()
+}
+
+func (s *shader) getAttributeLocation(name string) uint32 {
+	defer checkGLError()
+	return uint32(gl.GetAttribLocation((uint32)(*s), gl.Str(name+"\x00")))
 }
