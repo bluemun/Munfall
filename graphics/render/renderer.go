@@ -2,80 +2,113 @@
 // Use of this source code is governed by a MIT License
 // license that can be found in the LICENSE file.
 
-// Package graphics renderer.go Defines a renderer in the graphics package.
-package graphics
+// Package render renderer.go Defines a renderer in the graphics package.
+package render
 
 import (
+	"github.com/bluemun/engine"
+	"github.com/bluemun/engine/graphics/shader"
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
+// Renderable interface used to pass data to a renderer.
+type Renderable interface {
+	mesh() *Mesh
+	pos() (float32, float32)
+}
+
+// Renderer interface used to talk to renderers.
+type Renderer interface {
+	Begin()
+	DrawRectangle(x, y, w, h float32)
+	Submit(ra Renderable)
+	Flush()
+	End()
+}
+
 // Renderer used by the graphics library to draw.
-type Renderer struct {
+type renderer2d struct {
 	vertexOffset, indexOffset, vertexBufferSize, indexBufferSize int
 	vertexArray, vertexBuffer, indexBuffer                       uint32
-	s                                                            *shader
+	s                                                            shader.Shader
 }
 
 const int32Size = 4
 const float32Size = 4
 const vertexSize = 3 * float32Size
 
-// CreateRenderer used to create a renderer object correctly.
-func CreateRenderer(s *shader, vertexBufferSize, indexBufferSize int) *Renderer {
-	r := new(Renderer)
-	r.s = s
+const vertexShader = `
+#version 130
+in highp vec3 vertex;
+void main() {
+    gl_Position = vec4(vertex, 1);
+}
+` + "\x00"
+
+const fragmentShader = `
+#version 130
+out highp vec4 outputColor;
+void main() {
+    outputColor = vec4(1, 0, 1, 1);
+}
+` + "\x00"
+
+// CreateRenderer2D used to create a renderer2d object correctly.
+func CreateRenderer2D(vertexBufferSize, indexBufferSize int) Renderer {
+	r := new(renderer2d)
 	r.vertexBufferSize = vertexBufferSize
 	r.indexBufferSize = indexBufferSize
-	do(func() {
-		r.s.use()
+	engine.Do(func() {
+		r.s = shader.CreateShader(vertexShader, fragmentShader)
+		r.s.Use()
 		gl.GenVertexArrays(1, &r.vertexArray)
-		checkGLError()
+		engine.CheckGLError()
 		gl.BindVertexArray(r.vertexArray)
-		checkGLError()
+		engine.CheckGLError()
 
 		gl.GenBuffers(1, &r.vertexBuffer)
-		checkGLError()
+		engine.CheckGLError()
 		gl.BindBuffer(gl.ARRAY_BUFFER, r.vertexBuffer)
-		checkGLError()
+		engine.CheckGLError()
 		gl.BufferData(gl.ARRAY_BUFFER, (int)(10000*vertexSize), nil, gl.DYNAMIC_DRAW)
-		checkGLError()
+		engine.CheckGLError()
 
-		vertAttrib := r.s.getAttributeLocation("vertex")
-		logger.Info("Vertex attribute location: ", vertAttrib)
+		vertAttrib := r.s.GetAttributeLocation("vertex")
+		engine.Logger.Info("Vertex attribute location: ", vertAttrib)
 		gl.EnableVertexAttribArray(vertAttrib)
-		checkGLError()
+		engine.CheckGLError()
 		gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, vertexSize, gl.PtrOffset(0))
-		checkGLError()
+		engine.CheckGLError()
 
 		gl.GenBuffers(1, &r.indexBuffer)
-		checkGLError()
+		engine.CheckGLError()
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
-		checkGLError()
+		engine.CheckGLError()
 
 		gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, (int)(10000*int32Size), nil, gl.DYNAMIC_DRAW)
-		checkGLError()
+		engine.CheckGLError()
 
-		gl.BindFragDataLocation((uint32)(*r.s), 0, gl.Str("outputColor\x00"))
-		checkGLError()
+		r.s.BindFragDataLocation("outputColor")
+		engine.CheckGLError()
 	})
 
 	return r
 }
 
 // Begin starts the rendering procedure.
-func (r *Renderer) Begin() {
+func (r *renderer2d) Begin() {
 	r.indexOffset, r.vertexOffset = 0, 0
-	do(func() {
-		r.s.use()
+	engine.Do(func() {
+		r.s.Use()
 		gl.BindBuffer(gl.ARRAY_BUFFER, r.vertexBuffer)
-		checkGLError()
+		engine.CheckGLError()
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
-		checkGLError()
+		engine.CheckGLError()
 	})
 }
 
 // DrawRectangle draws a rectangle using the given values, x and y point to the top-left corner.
-func (r *Renderer) DrawRectangle(x, y, w, h float32) {
+func (r *renderer2d) DrawRectangle(x, y, w, h float32) {
 	vertices := [12]float32{
 		x, y, 0,
 		x + w, y, 0,
@@ -92,18 +125,18 @@ func (r *Renderer) DrawRectangle(x, y, w, h float32) {
 		r.indexOffset, r.vertexOffset = 0, 0
 	}
 
-	do(func() {
+	engine.Do(func() {
 		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset)*float32Size, 12*float32Size, gl.Ptr(&vertices[0]))
-		checkGLError()
+		engine.CheckGLError()
 		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset)*int32Size, 6*int32Size, gl.Ptr(&indices[0]))
-		checkGLError()
+		engine.CheckGLError()
 	})
 	r.vertexOffset += 12
 	r.indexOffset += 6
 }
 
 // Submit adds the given Renderable to this draw call.
-func (r *Renderer) Submit(ra Renderable) {
+func (r *renderer2d) Submit(ra Renderable) {
 	mesh := ra.mesh()
 	x, y := ra.pos()
 
@@ -123,34 +156,34 @@ func (r *Renderer) Submit(ra Renderable) {
 		r.indexOffset, r.vertexOffset = 0, 0
 	}
 
-	do(func() {
+	engine.Do(func() {
 		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset+len(vertices))*float32Size, len(vertices)*float32Size, gl.Ptr(vertices))
-		checkGLError()
+		engine.CheckGLError()
 		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset+len(indices))*int32Size, len(indices)*int32Size, gl.Ptr(indices))
-		checkGLError()
+		engine.CheckGLError()
 	})
 	r.vertexOffset += len(vertices)
 	r.indexOffset += len(indices)
 }
 
 // Flush flushes all the draw calls that have been called on this renderer to the window
-func (r *Renderer) Flush() {
-	do(func() {
+func (r *renderer2d) Flush() {
+	engine.Do(func() {
 		gl.BindVertexArray(r.vertexArray)
-		checkGLError()
+		engine.CheckGLError()
 		gl.DrawElements(gl.TRIANGLES, int32(r.indexOffset), gl.UNSIGNED_INT, nil)
-		checkGLError()
+		engine.CheckGLError()
 		gl.BindVertexArray(0)
-		checkGLError()
+		engine.CheckGLError()
 	})
 }
 
 // End ends the rendering procedure.
-func (r *Renderer) End() {
-	do(func() {
+func (r *renderer2d) End() {
+	engine.Do(func() {
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, 0)
-		checkGLError()
+		engine.CheckGLError()
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-		checkGLError()
+		engine.CheckGLError()
 	})
 }

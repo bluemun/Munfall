@@ -2,17 +2,19 @@
 // Use of this source code is governed by a MIT License
 // license that can be found in the LICENSE file.
 
-// Package graphics debug.go Defines our logging.
-package graphics
+// Package engine debug.go Defines our logging.
+package engine
 
 import (
-	"github.com/go-gl/gl/v3.3-core/gl"
-	"github.com/op/go-logging"
 	"os"
 	"runtime/debug"
+
+	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/op/go-logging"
 )
 
-var logger = logging.MustGetLogger("graphics")
+// Logger used to log information.
+var Logger = logging.MustGetLogger("graphics")
 var format = logging.MustStringFormatter(
 	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
@@ -29,11 +31,12 @@ func init() {
 	logging.SetBackend(backend1Leveled)
 }
 
-func checkGLError() {
-	if logger.IsEnabledFor(logging.DEBUG) {
+// CheckGLError used to check and log any errors that happen in opengl calls.
+func CheckGLError() {
+	if Logger.IsEnabledFor(logging.DEBUG) {
 		if e := gl.GetError(); e != gl.NO_ERROR {
 			debug.PrintStack()
-			logger.Critical("OpenGL error: ", e)
+			Logger.Critical("OpenGL error: ", e)
 		}
 	}
 }

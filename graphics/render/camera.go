@@ -2,11 +2,12 @@
 // Use of this source code is governed by a MIT License
 // license that can be found in the LICENSE file.
 
-// Package graphics camera.go Defines a camera type
+// Package render camera.go Defines a camera type
 // used to control the opengl viewport.
-package graphics
+package render
 
 import (
+	"github.com/bluemun/engine"
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
@@ -17,5 +18,7 @@ type Camera struct {
 
 // Activate activates the camera on the current shader.
 func (*Camera) Activate() {
-	gl.UniformMatrix4fv(0, 0, false, nil)
+	engine.Do(func() {
+		gl.UniformMatrix4fv(0, 0, false, nil)
+	})
 }
