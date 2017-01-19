@@ -42,7 +42,7 @@ func CreateWindow() *Window {
 		version := gl.GoStr(gl.GetString(gl.VERSION))
 		fmt.Println("OpenGL version", version)
 
-		gl.ClearColor(0, 1, 1, 1)
+		gl.ClearColor(0, 0, 0, 1)
 	})
 
 	return window

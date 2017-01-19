@@ -15,12 +15,13 @@ import (
 type Renderable interface {
 	mesh() *Mesh
 	pos() (float32, float32)
+	color() uint32
 }
 
 // Renderer interface used to talk to renderers.
 type Renderer interface {
 	Begin()
-	DrawRectangle(x, y, w, h float32)
+	DrawRectangle(x, y, w, h float32, color uint32)
 	Submit(ra Renderable)
 	Flush()
 	End()
@@ -35,24 +36,42 @@ type renderer2d struct {
 
 const int32Size = 4
 const float32Size = 4
-const vertexSize = 3
+const vertexSize = 4
 
 const vertexShader = `
 #version 130
 in highp vec3 vertex;
+in highp float color;
+
 uniform highp mat4 pr;
+
+out highp float fcolor;
+
 void main() {
-    gl_Position = pr * vec4(vertex, 1);
+  fcolor = color;
+  gl_Position = pr * vec4(vertex, 1);
 }
 ` + "\x00"
 
 const fragmentShader = `
 #version 130
-out highp vec4 outputColor;
+in highp float fcolor;
+out vec4 outputColor;
 void main() {
-    outputColor = vec4(1, 0, 1, 1);
+  uint c = uint(fcolor);
+  outputColor = vec4(
+    float((c >> 24u) & 0xffu) / 255.0,
+    float((c >> 16u) & 0xffu) / 255.0,
+    float((c >> 8u) & 0xffu) / 255.0,
+    float(c & 0xffu) / 255.0
+  );
 }
 ` + "\x00"
+
+type vertex struct {
+	x, y, z float32
+	color   uint32
+}
 
 // CreateRenderer2D used to create a renderer2d object correctly.
 func CreateRenderer2D(vertexBufferSize, indexBufferSize int) Renderer {
@@ -74,11 +93,18 @@ func CreateRenderer2D(vertexBufferSize, indexBufferSize int) Renderer {
 		gl.BufferData(gl.ARRAY_BUFFER, (int)(10000*vertexSize*float32Size), nil, gl.DYNAMIC_DRAW)
 		engine.CheckGLError()
 
-		vertAttrib := r.s.GetAttributeLocation("vertex")
-		engine.Logger.Info("Vertex attribute location: ", vertAttrib)
-		gl.EnableVertexAttribArray(vertAttrib)
+		point := r.s.GetAttributeLocation("vertex")
+		gl.EnableVertexAttribArray(point)
 		engine.CheckGLError()
-		gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, vertexSize*float32Size, gl.PtrOffset(0))
+		engine.Logger.Info("Vertex attribute vertex location: ", point)
+		gl.VertexAttribPointer(point, 3, gl.FLOAT, false, vertexSize*float32Size, gl.PtrOffset(0))
+		engine.CheckGLError()
+
+		color := r.s.GetAttributeLocation("color")
+		gl.EnableVertexAttribArray(color)
+		engine.CheckGLError()
+		engine.Logger.Info("Vertex attribute color location: ", color)
+		gl.VertexAttribPointer(color, 1, gl.FLOAT, false, vertexSize*float32Size, gl.PtrOffset(3*float32Size))
 		engine.CheckGLError()
 
 		gl.GenBuffers(1, &r.indexBuffer)
@@ -113,12 +139,12 @@ func (r *renderer2d) Begin() {
 }
 
 // DrawRectangle draws a rectangle using the given values, x and y point to the top-left corner.
-func (r *renderer2d) DrawRectangle(x, y, w, h float32) {
-	vertices := [12]float32{
-		x, y, 0,
-		x + w, y, 0,
-		x, y + h, 0,
-		x + w, y + h, 0,
+func (r *renderer2d) DrawRectangle(x, y, w, h float32, color uint32) {
+	vertices := [16]float32{
+		x, y, 0, float32(color),
+		x + w, y, 0, float32(color),
+		x, y + h, 0, float32(color),
+		x + w, y + h, 0, float32(color),
 	}
 	indices := [6]uint32{
 		0 + uint32(r.vertexOffset), 1 + uint32(r.vertexOffset), 2 + uint32(r.vertexOffset),
@@ -131,7 +157,7 @@ func (r *renderer2d) DrawRectangle(x, y, w, h float32) {
 	}
 
 	engine.Do(func() {
-		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset*vertexSize)*float32Size, 12*float32Size, gl.Ptr(&vertices[0]))
+		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset*vertexSize)*float32Size, len(vertices)*float32Size, gl.Ptr(&vertices[0]))
 		engine.CheckGLError()
 		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset)*int32Size, 6*int32Size, gl.Ptr(&indices[0]))
 		engine.CheckGLError()
@@ -146,14 +172,14 @@ func (r *renderer2d) Submit(ra Renderable) {
 	x, y := ra.pos()
 
 	var vertices []float32
-	for i := 0; i < len(mesh.vertices); i += 3 {
-		vertices[i] = mesh.vertices[i] + x
-		vertices[i+1] = mesh.vertices[i+1] + y
-		vertices[i+2] = mesh.vertices[i+2]
+	for i := 0; i < len(mesh.points); i += 3 {
+		vertices[i] = mesh.points[i] + x
+		vertices[i+1] = mesh.points[i+1] + y
+		vertices[i+2] = mesh.points[i+2]
 	}
 	var indices []uint32
-	for i := 0; i < len(mesh.indices); i++ {
-		indices[i] = uint32(r.vertexOffset) + mesh.indices[i]
+	for i := 0; i < len(mesh.triangles); i++ {
+		indices[i] = uint32(r.vertexOffset) + mesh.triangles[i]
 	}
 
 	if r.vertexOffset+len(vertices) >= r.vertexBufferSize || r.indexOffset+len(indices) >= r.indexBufferSize {
