@@ -55,7 +55,7 @@ func CreateWindow() *Window {
 		window.s = createShader(vertexShader, fragmentShader)
 	})
 
-	window.r = CreateRenderer(window.s)
+	window.r = CreateRenderer(window.s, 10000, 10000)
 
 	return window
 }
