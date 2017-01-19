@@ -7,18 +7,29 @@
 package render
 
 import (
-	"github.com/bluemun/engine"
+	"github.com/bluemun/engine/graphics/shader"
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 // Camera type used to hold the position of the camera.
 type Camera struct {
-	x, y float32
+	X, Y, Width, Height float32
 }
 
+var activeCamera *Camera
+
 // Activate activates the camera on the current shader.
-func (*Camera) Activate() {
-	engine.Do(func() {
-		gl.UniformMatrix4fv(0, 0, false, nil)
-	})
+func (c *Camera) Activate() {
+	activeCamera = c
+}
+
+func (c *Camera) use(s shader.Shader) {
+	view := mgl32.Ortho2D(
+		c.X-c.Width/2,
+		c.X+c.Width/2,
+		c.Y-c.Height/2,
+		c.Y+c.Height/2)
+
+	gl.UniformMatrix4fv(s.GetUniformLocation("pr"), 1, false, &view[0])
 }

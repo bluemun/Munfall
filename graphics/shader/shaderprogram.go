@@ -18,6 +18,7 @@ import (
 type Shader interface {
 	Use()
 	GetAttributeLocation(name string) uint32
+	GetUniformLocation(name string) int32
 	BindFragDataLocation(loc string)
 }
 
@@ -96,6 +97,14 @@ func (s *shader) Use() {
 func (s *shader) GetAttributeLocation(name string) uint32 {
 	defer engine.CheckGLError()
 	return uint32(gl.GetAttribLocation((uint32)(*s), gl.Str(name+"\x00")))
+}
+
+func (s *shader) GetUniformLocation(name string) int32 {
+	loc := gl.GetUniformLocation((uint32)(*s), gl.Str(name+"\x00"))
+	if loc == -1 {
+		engine.Logger.Info("Fetching location of uniform", name, "from shader", (uint32)(*s), "failed.")
+	}
+	return loc
 }
 
 func (s *shader) BindFragDataLocation(loc string) {

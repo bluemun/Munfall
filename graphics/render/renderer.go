@@ -35,13 +35,14 @@ type renderer2d struct {
 
 const int32Size = 4
 const float32Size = 4
-const vertexSize = 3 * float32Size
+const vertexSize = 3
 
 const vertexShader = `
 #version 130
 in highp vec3 vertex;
+uniform highp mat4 pr;
 void main() {
-    gl_Position = vec4(vertex, 1);
+    gl_Position = pr * vec4(vertex, 1);
 }
 ` + "\x00"
 
@@ -70,14 +71,14 @@ func CreateRenderer2D(vertexBufferSize, indexBufferSize int) Renderer {
 		engine.CheckGLError()
 		gl.BindBuffer(gl.ARRAY_BUFFER, r.vertexBuffer)
 		engine.CheckGLError()
-		gl.BufferData(gl.ARRAY_BUFFER, (int)(10000*vertexSize), nil, gl.DYNAMIC_DRAW)
+		gl.BufferData(gl.ARRAY_BUFFER, (int)(10000*vertexSize*float32Size), nil, gl.DYNAMIC_DRAW)
 		engine.CheckGLError()
 
 		vertAttrib := r.s.GetAttributeLocation("vertex")
 		engine.Logger.Info("Vertex attribute location: ", vertAttrib)
 		gl.EnableVertexAttribArray(vertAttrib)
 		engine.CheckGLError()
-		gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, vertexSize, gl.PtrOffset(0))
+		gl.VertexAttribPointer(vertAttrib, 3, gl.FLOAT, false, vertexSize*float32Size, gl.PtrOffset(0))
 		engine.CheckGLError()
 
 		gl.GenBuffers(1, &r.indexBuffer)
@@ -100,6 +101,10 @@ func (r *renderer2d) Begin() {
 	r.indexOffset, r.vertexOffset = 0, 0
 	engine.Do(func() {
 		r.s.Use()
+		if activeCamera != nil {
+			activeCamera.use(r.s)
+		}
+
 		gl.BindBuffer(gl.ARRAY_BUFFER, r.vertexBuffer)
 		engine.CheckGLError()
 		gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, r.indexBuffer)
@@ -116,8 +121,8 @@ func (r *renderer2d) DrawRectangle(x, y, w, h float32) {
 		x + w, y + h, 0,
 	}
 	indices := [6]uint32{
-		0 + uint32(r.indexOffset), 1 + uint32(r.indexOffset), 2 + uint32(r.indexOffset),
-		1 + uint32(r.indexOffset), 2 + uint32(r.indexOffset), 3 + uint32(r.indexOffset),
+		0 + uint32(r.vertexOffset), 1 + uint32(r.vertexOffset), 2 + uint32(r.vertexOffset),
+		1 + uint32(r.vertexOffset), 2 + uint32(r.vertexOffset), 3 + uint32(r.vertexOffset),
 	}
 
 	if r.vertexOffset+12 >= r.vertexBufferSize || r.indexOffset+6 >= r.indexBufferSize {
@@ -126,12 +131,12 @@ func (r *renderer2d) DrawRectangle(x, y, w, h float32) {
 	}
 
 	engine.Do(func() {
-		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset)*float32Size, 12*float32Size, gl.Ptr(&vertices[0]))
+		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset*vertexSize)*float32Size, 12*float32Size, gl.Ptr(&vertices[0]))
 		engine.CheckGLError()
 		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset)*int32Size, 6*int32Size, gl.Ptr(&indices[0]))
 		engine.CheckGLError()
 	})
-	r.vertexOffset += 12
+	r.vertexOffset += 4
 	r.indexOffset += 6
 }
 
@@ -148,7 +153,7 @@ func (r *renderer2d) Submit(ra Renderable) {
 	}
 	var indices []uint32
 	for i := 0; i < len(mesh.indices); i++ {
-		indices[i] = uint32(r.indexOffset) + mesh.indices[i]
+		indices[i] = uint32(r.vertexOffset) + mesh.indices[i]
 	}
 
 	if r.vertexOffset+len(vertices) >= r.vertexBufferSize || r.indexOffset+len(indices) >= r.indexBufferSize {
@@ -157,12 +162,12 @@ func (r *renderer2d) Submit(ra Renderable) {
 	}
 
 	engine.Do(func() {
-		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset+len(vertices))*float32Size, len(vertices)*float32Size, gl.Ptr(vertices))
+		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset*vertexSize+len(vertices))*float32Size, len(vertices)*float32Size, gl.Ptr(vertices))
 		engine.CheckGLError()
 		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset+len(indices))*int32Size, len(indices)*int32Size, gl.Ptr(indices))
 		engine.CheckGLError()
 	})
-	r.vertexOffset += len(vertices)
+	r.vertexOffset += len(vertices) / vertexSize
 	r.indexOffset += len(indices)
 }
 
