@@ -15,7 +15,7 @@ import (
 // for rendering (2D implementation).
 type TraitRender2D interface {
 	logic.Trait
-	Render2D() Renderable
+	Render2D() []Renderable
 }
 
 // RendersTraits defines a collection of objects that can be used in conjunction
@@ -42,7 +42,9 @@ func (r *renderTraits2d) Render() {
 	traits := r.world.Traitmanager.Lookup(t1)
 	r.renderer.Begin()
 	for _, trait := range traits {
-		r.renderer.Submit(trait.(TraitRender2D).Render2D())
+		for _, renderable := range trait.(TraitRender2D).Render2D() {
+			r.renderer.Submit(renderable)
+		}
 	}
 	r.renderer.Flush()
 	r.renderer.End()

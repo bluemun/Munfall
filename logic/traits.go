@@ -12,7 +12,7 @@ type Trait interface{}
 // TraitTick is a trait that gets called every time the world ticks.
 type TraitTick interface {
 	Trait
-	Tick()
+	Tick(deltaUnit float32)
 }
 
 // TraitNotifyAdded is a trait that gets notified when it is added to the world.

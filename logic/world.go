@@ -26,6 +26,6 @@ func (w *World) Tick(deltaUnit float32) {
 	var t1 = reflect.TypeOf((*TraitTick)(nil)).Elem()
 	tickers := w.Traitmanager.Lookup(t1)
 	for _, ticker := range tickers {
-		ticker.(TraitTick).Tick()
+		ticker.(TraitTick).Tick(deltaUnit)
 	}
 }

@@ -13,9 +13,9 @@ import (
 
 // Renderable interface used to pass data to a renderer.
 type Renderable interface {
-	mesh() *Mesh
-	pos() (float32, float32)
-	color() uint32
+	Mesh() *Mesh
+	Pos() (float32, float32)
+	Color() uint32
 }
 
 // Renderer interface used to talk to renderers.
@@ -168,18 +168,17 @@ func (r *renderer2d) DrawRectangle(x, y, w, h float32, color uint32) {
 
 // Submit adds the given Renderable to this draw call.
 func (r *renderer2d) Submit(ra Renderable) {
-	mesh := ra.mesh()
-	x, y := ra.pos()
+	mesh := ra.Mesh()
+	x, y := ra.Pos()
+	color := float32(ra.Color())
 
 	var vertices []float32
-	for i := 0; i < len(mesh.points); i += 3 {
-		vertices[i] = mesh.points[i] + x
-		vertices[i+1] = mesh.points[i+1] + y
-		vertices[i+2] = mesh.points[i+2]
+	for i := 0; i < len(mesh.Points); i += 3 {
+		vertices = append(vertices, mesh.Points[i]+x, mesh.Points[i+1]+y, mesh.Points[i+2], color)
 	}
 	var indices []uint32
-	for i := 0; i < len(mesh.triangles); i++ {
-		indices[i] = uint32(r.vertexOffset) + mesh.triangles[i]
+	for i := 0; i < len(mesh.Triangles); i++ {
+		indices = append(indices, uint32(r.vertexOffset)+mesh.Triangles[i])
 	}
 
 	if r.vertexOffset+len(vertices) >= r.vertexBufferSize || r.indexOffset+len(indices) >= r.indexBufferSize {

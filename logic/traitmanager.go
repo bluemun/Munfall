@@ -8,8 +8,6 @@ package logic
 
 import (
 	"reflect"
-
-	"github.com/bluemun/engine"
 )
 
 // TraitManager holds traits for easy lookup.
@@ -36,7 +34,6 @@ func createTraitManager(w *World) *traitManager {
 // AddTrait adds a trait to the manager.
 func (tm *traitManager) AddTrait(tr Trait) {
 	tm.traits[tr] = true
-	engine.Logger.Info(tm.traits)
 	notify, found := tr.(TraitNotifyAdded)
 	if found {
 		notify.NotifyAdded(tm.world)

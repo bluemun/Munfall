@@ -8,8 +8,8 @@ package render
 
 // Mesh type used to hold rendering data.
 type Mesh struct {
-	points    []float32
-	triangles []uint32
+	Points    []float32
+	Triangles []uint32
 }
 
 // ToColor used to compress a color down to a uint32.
