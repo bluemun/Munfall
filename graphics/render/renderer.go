@@ -68,11 +68,6 @@ void main() {
 }
 ` + "\x00"
 
-type vertex struct {
-	x, y, z float32
-	color   uint32
-}
-
 // CreateRenderer2D used to create a renderer2d object correctly.
 func CreateRenderer2D(vertexBufferSize, indexBufferSize int) Renderer {
 	r := new(renderer2d)
@@ -151,19 +146,7 @@ func (r *renderer2d) DrawRectangle(x, y, w, h float32, color uint32) {
 		1 + uint32(r.vertexOffset), 2 + uint32(r.vertexOffset), 3 + uint32(r.vertexOffset),
 	}
 
-	if r.vertexOffset+12 >= r.vertexBufferSize || r.indexOffset+6 >= r.indexBufferSize {
-		r.Flush()
-		r.indexOffset, r.vertexOffset = 0, 0
-	}
-
-	engine.Do(func() {
-		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset*vertexSize)*float32Size, len(vertices)*float32Size, gl.Ptr(&vertices[0]))
-		engine.CheckGLError()
-		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset)*int32Size, 6*int32Size, gl.Ptr(&indices[0]))
-		engine.CheckGLError()
-	})
-	r.vertexOffset += 4
-	r.indexOffset += 6
+	r.draw(vertices[:], indices[:])
 }
 
 // Submit adds the given Renderable to this draw call.
@@ -181,15 +164,23 @@ func (r *renderer2d) Submit(ra Renderable) {
 		indices = append(indices, uint32(r.vertexOffset)+mesh.Triangles[i])
 	}
 
-	if r.vertexOffset+len(vertices) >= r.vertexBufferSize || r.indexOffset+len(indices) >= r.indexBufferSize {
+	r.draw(vertices, indices)
+}
+
+func (r *renderer2d) draw(vertices []float32, indices []uint32) {
+	if len(vertices) == 0 || len(indices) == 0 {
+		return
+	}
+
+	if r.vertexOffset*vertexSize+len(vertices) >= r.vertexBufferSize || r.indexOffset+len(indices) >= r.indexBufferSize {
 		r.Flush()
 		r.indexOffset, r.vertexOffset = 0, 0
 	}
 
 	engine.Do(func() {
-		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset*vertexSize+len(vertices))*float32Size, len(vertices)*float32Size, gl.Ptr(vertices))
+		gl.BufferSubData(gl.ARRAY_BUFFER, (r.vertexOffset*vertexSize)*float32Size, len(vertices)*float32Size, gl.Ptr(vertices))
 		engine.CheckGLError()
-		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset+len(indices))*int32Size, len(indices)*int32Size, gl.Ptr(indices))
+		gl.BufferSubData(gl.ELEMENT_ARRAY_BUFFER, (r.indexOffset)*int32Size, len(indices)*int32Size, gl.Ptr(indices))
 		engine.CheckGLError()
 	})
 	r.vertexOffset += len(vertices) / vertexSize
