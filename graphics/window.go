@@ -28,7 +28,7 @@ func CreateWindow() *Window {
 			engine.Logger.Panic("Failed to initialize GLFW.")
 		}
 
-		window = new(Window)
+		window = &Window{}
 		window.inner, err = glfw.CreateWindow(800, 600, "Test", nil, nil)
 		if err != nil {
 			engine.Logger.Panic("Failed to create GLFW window: ", err)

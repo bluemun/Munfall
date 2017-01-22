@@ -7,22 +7,24 @@
 package logic
 
 // Trait put inside actors.
-type Trait interface{}
+type Trait interface {
+}
+
+type trait struct {
+	traitRegister string
+}
 
 // TraitTick is a trait that gets called every time the world ticks.
 type TraitTick interface {
-	Trait
 	Tick(deltaUnit float32)
 }
 
 // TraitNotifyAdded is a trait that gets notified when it is added to the world.
 type TraitNotifyAdded interface {
-	Trait
-	NotifyAdded(w *World)
+	NotifyAdded(owner Actor)
 }
 
 // TraitNotifyRemoved is a trait that gets notified when it is removed from the world.
 type TraitNotifyRemoved interface {
-	Trait
-	NotifyRemoved(w *World)
+	NotifyRemoved(owner Actor)
 }

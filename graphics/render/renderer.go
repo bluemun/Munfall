@@ -70,9 +70,11 @@ void main() {
 
 // CreateRenderer2D used to create a renderer2d object correctly.
 func CreateRenderer2D(vertexBufferSize, indexBufferSize int) Renderer {
-	r := new(renderer2d)
-	r.vertexBufferSize = vertexBufferSize
-	r.indexBufferSize = indexBufferSize
+	r := &renderer2d{
+		vertexBufferSize: vertexBufferSize,
+		indexBufferSize:  indexBufferSize,
+	}
+
 	engine.Do(func() {
 		r.s = shader.CreateShader(vertexShader, fragmentShader)
 		r.s.Use()

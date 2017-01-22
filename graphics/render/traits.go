@@ -6,8 +6,6 @@
 package render
 
 import (
-	"reflect"
-
 	"github.com/bluemun/engine/logic"
 )
 
@@ -25,21 +23,17 @@ type RendersTraits interface {
 }
 
 type renderTraits2d struct {
-	world    *logic.World
+	world    logic.World
 	renderer Renderer
 }
 
 // CreateRendersTraits2D creates a 2D implementation of RendersTraits.
-func CreateRendersTraits2D(w *logic.World) RendersTraits {
-	rm := new(renderTraits2d)
-	rm.world = w
-	rm.renderer = CreateRenderer2D(10000, 10000)
-	return rm
+func CreateRendersTraits2D(w logic.World) RendersTraits {
+	return &renderTraits2d{world: w, renderer: CreateRenderer2D(10000, 10000)}
 }
 
 func (r *renderTraits2d) Render() {
-	var t1 = reflect.TypeOf((*TraitRender2D)(nil)).Elem()
-	traits := r.world.Traitmanager.Lookup(t1)
+	traits := r.world.TraitDictionary().GetAllTraitsImplementing((*TraitRender2D)(nil))
 	r.renderer.Begin()
 	for _, trait := range traits {
 		for _, renderable := range trait.(TraitRender2D).Render2D() {
