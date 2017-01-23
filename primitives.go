@@ -8,5 +8,12 @@ package engine
 
 // Order wraps an order that gets passed around by the order generator.
 type Order struct {
-	Order, Value string
+	Order string
+	Value interface{}
+}
+
+// Mesh type used to hold rendering data.
+type Mesh struct {
+	Points    []float32
+	Triangles []uint32
 }

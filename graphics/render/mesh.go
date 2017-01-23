@@ -6,12 +6,6 @@
 // used to descripe an object for rendering.
 package render
 
-// Mesh type used to hold rendering data.
-type Mesh struct {
-	Points    []float32
-	Triangles []uint32
-}
-
 // ToColor used to compress a color down to a uint32.
 func ToColor(r, g, b, a uint32) uint32 {
 	return (r&0xff)<<24 | (g&0xff)<<16 | (b&0xff)<<8 | (a & 0xff)

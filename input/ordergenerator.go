@@ -7,45 +7,54 @@ package input
 
 import (
 	"github.com/bluemun/engine"
-	"github.com/bluemun/engine/logic"
 )
 
 // OrderGenerator issues orders based on input.
 type OrderGenerator interface {
-	IssueOrder(order, value string)
+	GetOrders() []*engine.Order
 	HandleKey(code int)
 	HandleMouseMove(x, y float32)
 	HandleMouseButton(button int)
 }
 
-// ScriptableOrderGenerator bla.
+// ScriptableOrderGenerator an order generator implementation that allows you to
+// add hotkeys as orders that will be generated.
 type ScriptableOrderGenerator struct {
-	world      *logic.World
+	world      *engine.World
 	keyScripts map[int]*engine.Order
+	orders     []*engine.Order
 }
 
-// IssueOrder bla.
-func (s *ScriptableOrderGenerator) IssueOrder(order, value string) {
-
+// CreateScriptableOrderGenerator creates a ScriptableOrderGenerator and initializes it.
+func CreateScriptableOrderGenerator() *ScriptableOrderGenerator {
+	return &ScriptableOrderGenerator{keyScripts: make(map[int]*engine.Order, 0)}
 }
 
-// HandleKey bla.
+// GetOrders bla.
+func (s *ScriptableOrderGenerator) GetOrders() []*engine.Order {
+	x := s.orders
+	s.orders = nil
+	return x
+}
+
+// HandleKey handles key presses.
 func (s *ScriptableOrderGenerator) HandleKey(code int) {
 	value, exists := s.keyScripts[code]
 	if exists {
-		s.world.ResolveOrder(value)
+		newValue := &engine.Order{Order: value.Order, Value: value.Value}
+		s.orders = append(s.orders, newValue)
 	}
 }
 
-// HandleMouseMove bla.
+// HandleMouseMove handles mouse movement.
 func (s *ScriptableOrderGenerator) HandleMouseMove(x, y float32) {
 }
 
-// HandleMouseButton bla.
+// HandleMouseButton handles mouse buttons.
 func (s *ScriptableOrderGenerator) HandleMouseButton(button int) {
 }
 
-// AddKeyScript bla.
-func (s *ScriptableOrderGenerator) AddKeyScript(code int, order, value string) {
+// AddKeyScript adds a key as an order that this generator sends.
+func (s *ScriptableOrderGenerator) AddKeyScript(code int, order string, value interface{}) {
 	s.keyScripts[code] = &engine.Order{Order: order, Value: value}
 }

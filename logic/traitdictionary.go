@@ -13,36 +13,36 @@ import (
 )
 
 // TraitDictionary holds traits for easy lookup.
-type TraitDictionary struct {
-	traits map[reflect.Type]map[uint][]Trait
-	world  *World
+type traitDictionary struct {
+	traits map[reflect.Type]map[uint][]engine.Trait
+	world  *world
 }
 
 // CreateTraitDictionary creates and initializes the traitManager.
-func CreateTraitDictionary(w *World) *TraitDictionary {
-	return &TraitDictionary{
-		traits: make(map[reflect.Type]map[uint][]Trait),
+func createTraitDictionary(w *world) *traitDictionary {
+	return &traitDictionary{
+		traits: make(map[reflect.Type]map[uint][]engine.Trait),
 		world:  w,
 	}
 }
 
-func (td *TraitDictionary) addTrait(a *Actor, t Trait) {
+func (td *traitDictionary) addTrait(a *actor, t engine.Trait) {
 	traittype := reflect.TypeOf(t)
 	at, exist := td.traits[traittype]
 	if !exist {
-		at = make(map[uint][]Trait)
+		at = make(map[uint][]engine.Trait)
 		td.traits[traittype] = at
 	}
 
 	traits, exist := at[a.GetActorID()]
 	if !exist {
-		at[a.GetActorID()] = []Trait{t}
+		at[a.GetActorID()] = []engine.Trait{t}
 	} else {
 		at[a.GetActorID()] = append(traits, t)
 	}
 }
 
-func (td *TraitDictionary) removeActor(a *Actor) {
+func (td *traitDictionary) removeActor(a *actor) {
 	for _, at := range td.traits {
 		delete(at, a.GetActorID())
 	}
@@ -50,21 +50,22 @@ func (td *TraitDictionary) removeActor(a *Actor) {
 
 // GetTrait gets the given trait from the actor, doesnt support inheritance and
 // panics if the trait doesn't exist.
-func (td *TraitDictionary) GetTrait(a *Actor, i Trait) (Trait, bool) {
-	engine.Logger.Info(td.traits[reflect.TypeOf(i)])
+func (td *traitDictionary) GetTrait(a *actor, i engine.Trait) engine.Trait {
+	t := reflect.TypeOf(i)
+	engine.Logger.Info(td.traits[t])
 	engine.Logger.Info(a.GetActorID())
-	traits, exists := td.traits[reflect.TypeOf(i)][a.GetActorID()]
+	traits, exists := td.traits[t][a.GetActorID()]
 	if !exists || len(traits) != 1 {
-		return nil, false
+		engine.Logger.Panic("Trait", t, "doesnt exist on actor", a.GetActorID())
 	}
 
-	return traits[0], true
+	return traits[0]
 }
 
 // GetTraitsImplementing gets all the traits on the given actor that implement
 // the given Trait interface.
-func (td *TraitDictionary) GetTraitsImplementing(a *Actor, i Trait) []Trait {
-	out := make([]Trait, 0, 1)
+func (td *traitDictionary) GetTraitsImplementing(a *actor, i engine.Trait) []engine.Trait {
+	out := make([]engine.Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
 	for traitType, actorMap := range td.traits {
 		engine.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", a.GetActorID(), ":", actorMap)
@@ -81,8 +82,8 @@ func (td *TraitDictionary) GetTraitsImplementing(a *Actor, i Trait) []Trait {
 
 // GetAllTraitsImplementing gets all the traits that are in the dictionary
 // that implement the given interface.
-func (td *TraitDictionary) GetAllTraitsImplementing(i Trait) []Trait {
-	out := make([]Trait, 0, 1)
+func (td *traitDictionary) GetAllTraitsImplementing(i engine.Trait) []engine.Trait {
+	out := make([]engine.Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
 	engine.Logger.Debug("Check for traits implementing", requiredType)
 	for traitType, actorMap := range td.traits {

@@ -5,18 +5,22 @@
 // Package logic actor.go Defines something
 package logic
 
+import (
+	"github.com/bluemun/engine"
+)
+
 // Actor temp
-type Actor struct {
+type actor struct {
 	actorID uint
-	world   *World
+	world   *world
 }
 
 // World returns the world that this actor currently resides in.
-func (a *Actor) World() *World {
-	return a.world
+func (a *actor) World() engine.World {
+	return (engine.World)(a.world)
 }
 
 // GetActorID gets the actor id of this actor.
-func (a *Actor) GetActorID() uint {
+func (a *actor) GetActorID() uint {
 	return a.actorID
 }

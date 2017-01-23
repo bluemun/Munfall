@@ -14,6 +14,7 @@ import (
 	"github.com/bluemun/engine/graphics/render"
 	"github.com/bluemun/engine/input"
 	"github.com/bluemun/engine/logic"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 var mainHasRun = false
@@ -21,10 +22,10 @@ var mainHasRun = false
 // Game type used to gold all the components needed to run a game.
 type Game struct {
 	Camera         *render.Camera
-	orderGenerator *input.OrderGenerator
-	window         *graphics.Window
-	world          *logic.World
+	orderGenerator input.OrderGenerator
 	renderer       render.RendersTraits
+	window         *graphics.Window
+	world          engine.World
 }
 
 // Initialize initializes the game.
@@ -61,6 +62,12 @@ func (g *Game) Start() {
 		case <-update.C:
 			g.world.Tick(1 / 60.0)
 			g.window.PollEvents()
+			if g.orderGenerator != nil {
+				for _, order := range g.orderGenerator.GetOrders() {
+					g.world.ResolveOrder(order)
+				}
+			}
+
 			if g.window.Closed() {
 				render.Stop()
 				update.Stop()
@@ -71,11 +78,14 @@ func (g *Game) Start() {
 }
 
 // SetOrderGenerator sets the current active order generator for the game.
-func (g *Game) SetOrderGenerator(og *input.OrderGenerator) {
+func (g *Game) SetOrderGenerator(og input.OrderGenerator) {
 	g.orderGenerator = og
+	g.window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, code int, action glfw.Action, mods glfw.ModifierKey) {
+		g.orderGenerator.HandleKey(code)
+	})
 }
 
 // World returns the underlying world.
-func (g *Game) World() *logic.World {
+func (g *Game) World() engine.World {
 	return g.world
 }

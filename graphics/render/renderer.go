@@ -11,18 +11,11 @@ import (
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
-// Renderable interface used to pass data to a renderer.
-type Renderable interface {
-	Mesh() *Mesh
-	Pos() (float32, float32)
-	Color() uint32
-}
-
 // Renderer interface used to talk to renderers.
 type Renderer interface {
 	Begin()
 	DrawRectangle(x, y, w, h float32, color uint32)
-	Submit(ra Renderable)
+	Submit(ra engine.Renderable)
 	Flush()
 	End()
 }
@@ -152,7 +145,7 @@ func (r *renderer2d) DrawRectangle(x, y, w, h float32, color uint32) {
 }
 
 // Submit adds the given Renderable to this draw call.
-func (r *renderer2d) Submit(ra Renderable) {
+func (r *renderer2d) Submit(ra engine.Renderable) {
 	mesh := ra.Mesh()
 	x, y := ra.Pos()
 	color := float32(ra.Color())
