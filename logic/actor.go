@@ -6,29 +6,17 @@
 package logic
 
 // Actor temp
-type Actor interface {
-	World() World
-	GetActorID() uint
-	Lookup(t Trait) []Trait
-}
-
-type actor struct {
+type Actor struct {
 	actorID uint
-	world   World
+	world   *World
 }
 
-//Pos() (float32, float32)
-
-func (a *actor) World() World {
+// World returns the world that this actor currently resides in.
+func (a *Actor) World() *World {
 	return a.world
 }
 
-// Lookup gets all traits implementing given trait.
-func (a *actor) GetActorID() uint {
+// GetActorID Gets the actor id of this actor.
+func (a *Actor) GetActorID() uint {
 	return a.actorID
-}
-
-// Lookup gets all traits implementing given trait.
-func (a *actor) Lookup(t Trait) []Trait {
-	return nil
 }

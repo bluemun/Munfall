@@ -24,7 +24,7 @@ func (c *Camera) Activate() {
 	activeCamera = c
 }
 
-func (c *Camera) use(s shader.Shader) {
+func (c *Camera) use(s *shader.Shader) {
 	view := mgl32.Ortho2D(
 		c.X-c.Width/2,
 		c.X+c.Width/2,

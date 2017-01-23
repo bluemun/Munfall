@@ -6,30 +6,23 @@
 package logic
 
 // World container that manages the game world.
-type World interface {
-	AddFrameEndTask(f func())
-	CreateActor(traits ...func() Trait) Actor
-	RemoveActor(a Actor)
-	TraitDictionary() TraitDictionary
-	Tick(deltaUnit float32)
-}
-
-type world struct {
-	actors          map[uint]Actor
-	traitDictionary *traitDictionary
+type World struct {
+	actors          map[uint]*Actor
+	traitDictionary *TraitDictionary
 	nextActorID     uint
 	endtasks        []func()
 }
 
 // CreateWorld creates and initializes the World.
-func CreateWorld() World {
-	world := &world{actors: make(map[uint]Actor, 10), endtasks: nil}
-	world.traitDictionary = createTraitDictionary(world)
-	return (World)(world)
+func CreateWorld() *World {
+	world := &World{actors: make(map[uint]*Actor, 10), endtasks: nil}
+	world.traitDictionary = CreateTraitDictionary(world)
+	return world
 }
 
-func (w *world) CreateActor(traits ...func() Trait) Actor {
-	a := &actor{actorID: w.nextActorID, world: w}
+// CreateActor Creates an actor in the world and initializes it with the given traits.
+func (w *World) CreateActor(traits ...func() Trait) *Actor {
+	a := &Actor{actorID: w.nextActorID, world: w}
 	w.actors[w.nextActorID] = a
 	w.nextActorID++
 
@@ -37,40 +30,43 @@ func (w *world) CreateActor(traits ...func() Trait) Actor {
 		w.traitDictionary.addTrait(a, trait())
 	}
 
-	notify := w.traitDictionary.GetTraitsImplementing(a, (*TraitNotifyAdded)(nil))
+	notify := w.traitDictionary.GetTraitsImplementing(a, (*TraitAddedNotifier)(nil))
 	for _, trait := range notify {
-		trait.(TraitNotifyAdded).NotifyAdded(a)
+		trait.(TraitAddedNotifier).NotifyAdded(a)
 	}
 
-	return (Actor)(a)
+	return a
 }
 
-func (w *world) RemoveActor(a Actor) {
+// RemoveActor Removes the given actor from the world.
+func (w *World) RemoveActor(a *Actor) {
 	if a == nil {
 		panic("Trying to remove nil as an Actor!")
 	}
 
-	notify := w.traitDictionary.GetTraitsImplementing(a, (*TraitNotifyRemoved)(nil))
+	notify := w.traitDictionary.GetTraitsImplementing(a, (*TraitRemovedNotifier)(nil))
 	w.traitDictionary.removeActor(a)
 	delete(w.actors, a.GetActorID())
 	for _, trait := range notify {
-		trait.(TraitNotifyRemoved).NotifyRemoved(a)
+		trait.(TraitRemovedNotifier).NotifyRemoved(a)
 	}
 }
 
-func (w *world) AddFrameEndTask(f func()) {
+// AddFrameEndTask Adds a task that will be run at the end of the current tick.
+func (w *World) AddFrameEndTask(f func()) {
 	w.endtasks = append(w.endtasks, f)
 }
 
-func (w *world) TraitDictionary() TraitDictionary {
-	return (TraitDictionary)(w.traitDictionary)
+// TraitDictionary Gets the stored TraitDictionary.
+func (w *World) TraitDictionary() *TraitDictionary {
+	return w.traitDictionary
 }
 
 // Tick ticks all traits on the traitmanager that implement the Tick interface.
-func (w *world) Tick(deltaUnit float32) {
-	tickers := w.traitDictionary.GetAllTraitsImplementing((*TraitTick)(nil))
+func (w *World) Tick(deltaUnit float32) {
+	tickers := w.traitDictionary.GetAllTraitsImplementing((*TraitTicker)(nil))
 	for _, ticker := range tickers {
-		ticker.(TraitTick).Tick(deltaUnit)
+		ticker.(TraitTicker).Tick(deltaUnit)
 	}
 
 	for _, task := range w.endtasks {

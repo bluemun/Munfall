@@ -15,17 +15,10 @@ import (
 )
 
 // Shader used to interact with an opengl shader.
-type Shader interface {
-	Use()
-	GetAttributeLocation(name string) uint32
-	GetUniformLocation(name string) int32
-	BindFragDataLocation(loc string)
-}
-
-type shader uint32
+type Shader uint32
 
 // CreateShader used to create a shader from the given source.
-func CreateShader(vertexShaderSource, fragmentShaderSource string) Shader {
+func CreateShader(vertexShaderSource, fragmentShaderSource string) *Shader {
 	var program uint32
 
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
@@ -62,7 +55,7 @@ func CreateShader(vertexShaderSource, fragmentShaderSource string) Shader {
 	gl.DeleteShader(vertexShader)
 	gl.DeleteShader(fragmentShader)
 
-	var s = (shader)(program)
+	s := (Shader)(program)
 	return &s
 }
 
@@ -89,17 +82,20 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 	return shader, nil
 }
 
-func (s *shader) Use() {
+// Use Sets this shader as the active one.
+func (s *Shader) Use() {
 	gl.UseProgram((uint32)(*s))
 	engine.CheckGLError()
 }
 
-func (s *shader) GetAttributeLocation(name string) uint32 {
+// GetAttributeLocation Gets the location of the variable name in the shader.
+func (s *Shader) GetAttributeLocation(name string) uint32 {
 	defer engine.CheckGLError()
 	return uint32(gl.GetAttribLocation((uint32)(*s), gl.Str(name+"\x00")))
 }
 
-func (s *shader) GetUniformLocation(name string) int32 {
+// GetUniformLocation Gets the location of the uniform variable name in the shader.
+func (s *Shader) GetUniformLocation(name string) int32 {
 	loc := gl.GetUniformLocation((uint32)(*s), gl.Str(name+"\x00"))
 	if loc == -1 {
 		engine.Logger.Info("Fetching location of uniform", name, "from shader", (uint32)(*s), "failed.")
@@ -107,6 +103,7 @@ func (s *shader) GetUniformLocation(name string) int32 {
 	return loc
 }
 
-func (s *shader) BindFragDataLocation(loc string) {
+// BindFragDataLocation Sets the variable from which the fragment shader draws its result.
+func (s *Shader) BindFragDataLocation(loc string) {
 	gl.BindFragDataLocation((uint32)(*s), 0, gl.Str(loc+"\x00"))
 }

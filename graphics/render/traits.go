@@ -22,12 +22,12 @@ type RendersTraits interface {
 }
 
 type renderTraits2d struct {
-	world    logic.World
+	world    *logic.World
 	renderer Renderer
 }
 
 // CreateRendersTraits2D creates a 2D implementation of RendersTraits.
-func CreateRendersTraits2D(w logic.World) RendersTraits {
+func CreateRendersTraits2D(w *logic.World) RendersTraits {
 	return &renderTraits2d{world: w, renderer: CreateRenderer2D(10000, 10000)}
 }
 

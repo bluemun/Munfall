@@ -31,7 +31,7 @@ type Renderer interface {
 type renderer2d struct {
 	vertexOffset, indexOffset, vertexBufferSize, indexBufferSize int
 	vertexArray, vertexBuffer, indexBuffer                       uint32
-	s                                                            shader.Shader
+	s                                                            *shader.Shader
 }
 
 const int32Size = 4

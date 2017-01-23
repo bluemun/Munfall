@@ -14,17 +14,17 @@ type trait struct {
 	traitRegister string
 }
 
-// TraitTick is a trait that gets called every time the world ticks.
-type TraitTick interface {
+// TraitTicker is a trait that gets called every time the world ticks.
+type TraitTicker interface {
 	Tick(deltaUnit float32)
 }
 
-// TraitNotifyAdded is a trait that gets notified when it is added to the world.
-type TraitNotifyAdded interface {
-	NotifyAdded(owner Actor)
+// TraitAddedNotifier is a trait that gets notified when it is added to the world.
+type TraitAddedNotifier interface {
+	NotifyAdded(owner *Actor)
 }
 
-// TraitNotifyRemoved is a trait that gets notified when it is removed from the world.
-type TraitNotifyRemoved interface {
-	NotifyRemoved(owner Actor)
+// TraitRemovedNotifier is a trait that gets notified when it is removed from the world.
+type TraitRemovedNotifier interface {
+	NotifyRemoved(owner *Actor)
 }

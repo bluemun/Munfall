@@ -21,14 +21,13 @@ type Window struct {
 
 // CreateWindow creates a window correctly.
 func CreateWindow() *Window {
-	var window *Window
+	window := &Window{}
 	engine.Do(func() {
 		var err error
 		if err = glfw.Init(); err != nil {
 			engine.Logger.Panic("Failed to initialize GLFW.")
 		}
 
-		window = &Window{}
 		window.inner, err = glfw.CreateWindow(800, 600, "Test", nil, nil)
 		if err != nil {
 			engine.Logger.Panic("Failed to create GLFW window: ", err)
@@ -60,9 +59,9 @@ func (w *Window) Closed() bool {
 	return w.inner.ShouldClose()
 }
 
-// IsKeyPressed checks if the given key code is pressed.
-func (w *Window) IsKeyPressed(code int) bool {
-	return false
+// PollEvents polls the window events, should be called at the end of every update iteration.
+func (w *Window) PollEvents() {
+	glfw.PollEvents()
 }
 
 // SwapBuffers swaps the window buffers, should be called at the end of every render iteration.
@@ -70,9 +69,4 @@ func (w *Window) SwapBuffers() {
 	engine.Do(func() {
 		w.inner.SwapBuffers()
 	})
-}
-
-// PollEvents polls the window events, should be called at the end of every update iteration.
-func (w *Window) PollEvents() {
-	glfw.PollEvents()
 }

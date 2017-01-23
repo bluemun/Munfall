@@ -13,26 +13,20 @@ import (
 )
 
 // TraitDictionary holds traits for easy lookup.
-type TraitDictionary interface {
-	GetTrait(a Actor, i Trait) (Trait, bool)
-	GetTraitsImplementing(a Actor, i Trait) []Trait
-	GetAllTraitsImplementing(i Trait) []Trait
-}
-
-type traitDictionary struct {
+type TraitDictionary struct {
 	traits map[reflect.Type]map[uint][]Trait
-	world  *world
+	world  *World
 }
 
-// createTraitDictionary creates and initializes the traitManager.
-func createTraitDictionary(w *world) *traitDictionary {
-	return &traitDictionary{
+// CreateTraitDictionary creates and initializes the traitManager.
+func CreateTraitDictionary(w *World) *TraitDictionary {
+	return &TraitDictionary{
 		traits: make(map[reflect.Type]map[uint][]Trait),
 		world:  w,
 	}
 }
 
-func (td *traitDictionary) addTrait(a Actor, t Trait) {
+func (td *TraitDictionary) addTrait(a *Actor, t Trait) {
 	traittype := reflect.TypeOf(t)
 	at, exist := td.traits[traittype]
 	if !exist {
@@ -48,13 +42,15 @@ func (td *traitDictionary) addTrait(a Actor, t Trait) {
 	}
 }
 
-func (td *traitDictionary) removeActor(a Actor) {
+func (td *TraitDictionary) removeActor(a *Actor) {
 	for _, at := range td.traits {
 		delete(at, a.GetActorID())
 	}
 }
 
-func (td *traitDictionary) GetTrait(a Actor, i Trait) (Trait, bool) {
+// GetTrait Gets the given trait from the actor, doesnt support inheritance and
+// panics if the trait doesn't exist.
+func (td *TraitDictionary) GetTrait(a *Actor, i Trait) (Trait, bool) {
 	engine.Logger.Info(td.traits[reflect.TypeOf(i)])
 	engine.Logger.Info(a.GetActorID())
 	traits, exists := td.traits[reflect.TypeOf(i)][a.GetActorID()]
@@ -65,7 +61,9 @@ func (td *traitDictionary) GetTrait(a Actor, i Trait) (Trait, bool) {
 	return traits[0], true
 }
 
-func (td *traitDictionary) GetTraitsImplementing(a Actor, i Trait) []Trait {
+// GetTraitsImplementing Gets all the traits on the given actor that implement
+// the given Trait interface.
+func (td *TraitDictionary) GetTraitsImplementing(a *Actor, i Trait) []Trait {
 	out := make([]Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
 	for traitType, actorMap := range td.traits {
@@ -81,7 +79,9 @@ func (td *traitDictionary) GetTraitsImplementing(a Actor, i Trait) []Trait {
 	return out
 }
 
-func (td *traitDictionary) GetAllTraitsImplementing(i Trait) []Trait {
+// GetAllTraitsImplementing Gets all the traits that are in the dictionary
+// that implement the given interface.
+func (td *TraitDictionary) GetAllTraitsImplementing(i Trait) []Trait {
 	out := make([]Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
 	engine.Logger.Debug("Check for traits implementing", requiredType)
