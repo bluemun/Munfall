@@ -47,6 +47,11 @@ func CreateWindow() *Window {
 	return window
 }
 
+// SetKeyCallback sets the current key callback on the window.
+func (w *Window) SetKeyCallback(f func(w *glfw.Window, key glfw.Key, code int, action glfw.Action, mods glfw.ModifierKey)) {
+	w.inner.SetKeyCallback(f)
+}
+
 // Clear clears the screen.
 func (w *Window) Clear() {
 	engine.Do(func() {

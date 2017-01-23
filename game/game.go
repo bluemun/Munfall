@@ -12,6 +12,7 @@ import (
 	"github.com/bluemun/engine"
 	"github.com/bluemun/engine/graphics"
 	"github.com/bluemun/engine/graphics/render"
+	"github.com/bluemun/engine/input"
 	"github.com/bluemun/engine/logic"
 )
 
@@ -19,10 +20,11 @@ var mainHasRun = false
 
 // Game type used to gold all the components needed to run a game.
 type Game struct {
-	Camera   *render.Camera
-	window   *graphics.Window
-	world    *logic.World
-	renderer render.RendersTraits
+	Camera         *render.Camera
+	orderGenerator *input.OrderGenerator
+	window         *graphics.Window
+	world          *logic.World
+	renderer       render.RendersTraits
 }
 
 // Initialize initializes the game.
@@ -66,6 +68,11 @@ func (g *Game) Start() {
 			}
 		}
 	}
+}
+
+// SetOrderGenerator sets the current active order generator for the game.
+func (g *Game) SetOrderGenerator(og *input.OrderGenerator) {
+	g.orderGenerator = og
 }
 
 // World returns the underlying world.

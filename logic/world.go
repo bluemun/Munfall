@@ -5,6 +5,10 @@
 // Package logic world.go Defines our world type that runs the game.
 package logic
 
+import (
+	"github.com/bluemun/engine"
+)
+
 // World container that manages the game world.
 type World struct {
 	actors          map[uint]*Actor
@@ -55,6 +59,11 @@ func (w *World) RemoveActor(a *Actor) {
 // AddFrameEndTask adds a task that will be run at the end of the current tick.
 func (w *World) AddFrameEndTask(f func()) {
 	w.endtasks = append(w.endtasks, f)
+}
+
+// ResolveOrder bla.
+func (w *World) ResolveOrder(order *engine.Order) {
+
 }
 
 // TraitDictionary gets the stored TraitDictionary.
