@@ -12,7 +12,6 @@ import (
 // TraitRender2D called by TraitRenderManager to get renderables
 // for rendering (2D implementation).
 type TraitRender2D interface {
-	logic.Trait
 	Render2D() []Renderable
 }
 

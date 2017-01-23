@@ -69,9 +69,9 @@ func (td *traitDictionary) GetTraitsImplementing(a Actor, i Trait) []Trait {
 	out := make([]Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
 	for traitType, actorMap := range td.traits {
+		engine.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", a.GetActorID(), ":", actorMap)
 		traits, exists := actorMap[a.GetActorID()]
-		engine.Logger.Debug(traitType, "->", requiredType, "=", traitType.ConvertibleTo(requiredType))
-		if exists && traitType.ConvertibleTo(requiredType) {
+		if exists && traitType.Implements(requiredType) {
 			for _, trait := range traits {
 				out = append(out, trait)
 			}
@@ -84,8 +84,9 @@ func (td *traitDictionary) GetTraitsImplementing(a Actor, i Trait) []Trait {
 func (td *traitDictionary) GetAllTraitsImplementing(i Trait) []Trait {
 	out := make([]Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
+	engine.Logger.Debug("Check for traits implementing", requiredType)
 	for traitType, actorMap := range td.traits {
-		engine.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType))
+		engine.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", actorMap)
 		if traitType.Implements(requiredType) {
 			for _, y := range actorMap {
 				out = append(out, y...)
@@ -93,5 +94,6 @@ func (td *traitDictionary) GetAllTraitsImplementing(i Trait) []Trait {
 		}
 	}
 
+	engine.Logger.Debug(requiredType, ":=", out)
 	return out
 }
