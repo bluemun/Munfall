@@ -20,7 +20,7 @@ func CreateWorld() *World {
 	return world
 }
 
-// CreateActor Creates an actor in the world and initializes it with the given traits.
+// CreateActor creates an actor in the world and initializes it with the given traits.
 func (w *World) CreateActor(traits ...func() Trait) *Actor {
 	a := &Actor{actorID: w.nextActorID, world: w}
 	w.actors[w.nextActorID] = a
@@ -38,7 +38,7 @@ func (w *World) CreateActor(traits ...func() Trait) *Actor {
 	return a
 }
 
-// RemoveActor Removes the given actor from the world.
+// RemoveActor removes the given actor from the world.
 func (w *World) RemoveActor(a *Actor) {
 	if a == nil {
 		panic("Trying to remove nil as an Actor!")
@@ -52,12 +52,12 @@ func (w *World) RemoveActor(a *Actor) {
 	}
 }
 
-// AddFrameEndTask Adds a task that will be run at the end of the current tick.
+// AddFrameEndTask adds a task that will be run at the end of the current tick.
 func (w *World) AddFrameEndTask(f func()) {
 	w.endtasks = append(w.endtasks, f)
 }
 
-// TraitDictionary Gets the stored TraitDictionary.
+// TraitDictionary gets the stored TraitDictionary.
 func (w *World) TraitDictionary() *TraitDictionary {
 	return w.traitDictionary
 }

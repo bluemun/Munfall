@@ -23,13 +23,13 @@ func CreateShader(vertexShaderSource, fragmentShaderSource string) *Shader {
 
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
-		engine.Logger.Critical("Failed to compile vertex shader: ", err)
+		engine.Logger.Panic("Failed to compile vertex shader: ", err)
 		return nil
 	}
 
 	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
 	if err != nil {
-		engine.Logger.Critical("Failed to compile fragment shader: ", err)
+		engine.Logger.Panic("Failed to compile fragment shader: ", err)
 		return nil
 	}
 
@@ -48,7 +48,7 @@ func CreateShader(vertexShaderSource, fragmentShaderSource string) *Shader {
 		log := strings.Repeat("\x00", int(logLength+1))
 		gl.GetProgramInfoLog(program, logLength, nil, gl.Str(log))
 
-		engine.Logger.Critical("Failed to link shader program: ", err)
+		engine.Logger.Panic("Failed to link shader program: ", err)
 		return nil
 	}
 

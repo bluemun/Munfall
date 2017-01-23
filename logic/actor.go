@@ -16,7 +16,7 @@ func (a *Actor) World() *World {
 	return a.world
 }
 
-// GetActorID Gets the actor id of this actor.
+// GetActorID gets the actor id of this actor.
 func (a *Actor) GetActorID() uint {
 	return a.actorID
 }

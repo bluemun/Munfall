@@ -48,7 +48,7 @@ func (td *TraitDictionary) removeActor(a *Actor) {
 	}
 }
 
-// GetTrait Gets the given trait from the actor, doesnt support inheritance and
+// GetTrait gets the given trait from the actor, doesnt support inheritance and
 // panics if the trait doesn't exist.
 func (td *TraitDictionary) GetTrait(a *Actor, i Trait) (Trait, bool) {
 	engine.Logger.Info(td.traits[reflect.TypeOf(i)])
@@ -61,7 +61,7 @@ func (td *TraitDictionary) GetTrait(a *Actor, i Trait) (Trait, bool) {
 	return traits[0], true
 }
 
-// GetTraitsImplementing Gets all the traits on the given actor that implement
+// GetTraitsImplementing gets all the traits on the given actor that implement
 // the given Trait interface.
 func (td *TraitDictionary) GetTraitsImplementing(a *Actor, i Trait) []Trait {
 	out := make([]Trait, 0, 1)
@@ -79,7 +79,7 @@ func (td *TraitDictionary) GetTraitsImplementing(a *Actor, i Trait) []Trait {
 	return out
 }
 
-// GetAllTraitsImplementing Gets all the traits that are in the dictionary
+// GetAllTraitsImplementing gets all the traits that are in the dictionary
 // that implement the given interface.
 func (td *TraitDictionary) GetAllTraitsImplementing(i Trait) []Trait {
 	out := make([]Trait, 0, 1)

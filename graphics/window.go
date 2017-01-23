@@ -22,6 +22,7 @@ type Window struct {
 // CreateWindow creates a window correctly.
 func CreateWindow() *Window {
 	window := &Window{}
+
 	engine.Do(func() {
 		var err error
 		if err = glfw.Init(); err != nil {
@@ -37,7 +38,6 @@ func CreateWindow() *Window {
 		if err = gl.Init(); err != nil {
 			engine.Logger.Panic("Failed to initialize OpenGL: ", err)
 		}
-
 		version := gl.GoStr(gl.GetString(gl.VERSION))
 		fmt.Println("OpenGL version", version)
 

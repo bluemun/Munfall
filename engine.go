@@ -6,29 +6,25 @@
 package engine
 
 import (
-	"runtime"
 	"time"
 
 	"github.com/op/go-logging"
 )
 
-func init() {
-	runtime.LockOSThread()
-}
-
 // Loop used by opengl to do its calls, needs to be called by the main thread.
 func Loop() {
-	for f := range mainfunc {
+	for f := range Mainfunc {
 		f()
 	}
 }
 
-var mainfunc = make(chan func())
+// Mainfunc channel used internally to run the main thread on.
+var Mainfunc = make(chan func())
 
 // Do runs a given function on the main thread when there is time.
 func Do(f func()) {
 	done := make(chan bool, 1)
-	mainfunc <- func() {
+	Mainfunc <- func() {
 		if Logger.IsEnabledFor(logging.DEBUG) {
 			timer := time.NewTicker(time.Second * 10)
 			defer timer.Stop()
