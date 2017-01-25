@@ -49,9 +49,9 @@ func (g *Game) Initialize() {
 }
 
 // Start starts the game loop, doesn't return untill the game is closed.
-func (g *Game) Start() {
-	render := time.NewTicker(time.Second / 60)
-	update := time.NewTicker(time.Second / 60)
+func (g *Game) Start(framerate int64) {
+	render := time.NewTicker(time.Second / (time.Duration)(framerate))
+	update := time.NewTicker(time.Second / (time.Duration)(framerate))
 
 	for {
 		select {
@@ -60,7 +60,7 @@ func (g *Game) Start() {
 			g.renderer.Render()
 			g.window.SwapBuffers()
 		case <-update.C:
-			g.world.Tick(1 / 60.0)
+			g.world.Tick(1.0 / (float32)(framerate))
 			g.window.PollEvents()
 			if g.orderGenerator != nil {
 				for _, order := range g.orderGenerator.GetOrders() {
@@ -81,7 +81,9 @@ func (g *Game) Start() {
 func (g *Game) SetOrderGenerator(og input.OrderGenerator) {
 	g.orderGenerator = og
 	g.window.SetKeyCallback(func(w *glfw.Window, key glfw.Key, code int, action glfw.Action, mods glfw.ModifierKey) {
-		g.orderGenerator.HandleKey(code)
+		if action == glfw.Press || action == glfw.Release {
+			g.orderGenerator.HandleKey(code, action == glfw.Press)
+		}
 	})
 }
 

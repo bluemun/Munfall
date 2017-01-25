@@ -12,7 +12,7 @@ import (
 // OrderGenerator issues orders based on input.
 type OrderGenerator interface {
 	GetOrders() []*engine.Order
-	HandleKey(code int)
+	HandleKey(code int, state bool)
 	HandleMouseMove(x, y float32)
 	HandleMouseButton(button int)
 }
@@ -20,14 +20,13 @@ type OrderGenerator interface {
 // ScriptableOrderGenerator an order generator implementation that allows you to
 // add hotkeys as orders that will be generated.
 type ScriptableOrderGenerator struct {
-	world      *engine.World
-	keyScripts map[int]*engine.Order
+	keyScripts map[int]map[bool]*engine.Order
 	orders     []*engine.Order
 }
 
 // CreateScriptableOrderGenerator creates a ScriptableOrderGenerator and initializes it.
 func CreateScriptableOrderGenerator() *ScriptableOrderGenerator {
-	return &ScriptableOrderGenerator{keyScripts: make(map[int]*engine.Order, 0)}
+	return &ScriptableOrderGenerator{keyScripts: make(map[int]map[bool]*engine.Order, 0)}
 }
 
 // GetOrders bla.
@@ -38,11 +37,14 @@ func (s *ScriptableOrderGenerator) GetOrders() []*engine.Order {
 }
 
 // HandleKey handles key presses.
-func (s *ScriptableOrderGenerator) HandleKey(code int) {
-	value, exists := s.keyScripts[code]
+func (s *ScriptableOrderGenerator) HandleKey(code int, state bool) {
+	codeMap, exists := s.keyScripts[code]
 	if exists {
-		newValue := &engine.Order{Order: value.Order, Value: value.Value}
-		s.orders = append(s.orders, newValue)
+		value, exists := codeMap[state]
+		if exists {
+			newValue := &engine.Order{Order: value.Order, Value: value.Value}
+			s.orders = append(s.orders, newValue)
+		}
 	}
 }
 
@@ -55,6 +57,12 @@ func (s *ScriptableOrderGenerator) HandleMouseButton(button int) {
 }
 
 // AddKeyScript adds a key as an order that this generator sends.
-func (s *ScriptableOrderGenerator) AddKeyScript(code int, order string, value interface{}) {
-	s.keyScripts[code] = &engine.Order{Order: order, Value: value}
+func (s *ScriptableOrderGenerator) AddKeyScript(code int, down bool, order string, value interface{}) {
+	codeMap, exists := s.keyScripts[code]
+	if !exists {
+		codeMap = make(map[bool]*engine.Order, 0)
+		s.keyScripts[code] = codeMap
+	}
+
+	codeMap[down] = &engine.Order{Order: order, Value: value}
 }

@@ -76,7 +76,10 @@ func (w *world) RemoveActor(a engine.Actor) {
 
 // ResolveOrder bla.
 func (w *world) ResolveOrder(order *engine.Order) {
-	//w.traitDictionary.GetAllTraitsImplementing()
+	resolvers := w.traitDictionary.GetAllTraitsImplementing((*traits.TraitOrderResolver)(nil))
+	for _, trait := range resolvers {
+		trait.(traits.TraitOrderResolver).ResolveOrder(order)
+	}
 }
 
 // Tick ticks all traits on the traitmanager that implement the Tick interface.
