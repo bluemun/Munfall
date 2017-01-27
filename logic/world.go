@@ -30,33 +30,15 @@ func (w *world) AddFrameEndTask(f func()) {
 	w.endtasks = append(w.endtasks, f)
 }
 
-// CreateActor creates an actor in the world and initializes it with the given traits.
-func (w *world) CreateActor(ptraits ...func() engine.Trait) engine.Actor {
-	a := &actor{actorID: w.nextActorID, world: w}
-	w.actors[w.nextActorID] = a
-	w.nextActorID++
-
-	for _, trait := range ptraits {
-		w.traitDictionary.addTrait(a, trait())
-	}
-
-	notify := w.traitDictionary.GetTraitsImplementing(a, (*traits.TraitAddedNotifier)(nil))
-	for _, trait := range notify {
-		trait.(traits.TraitAddedNotifier).NotifyAdded((engine.Actor)(a))
-	}
-
-	return a
-}
-
-func (w *world) GetTrait(a engine.Actor, i engine.Trait) engine.Trait {
+func (w *world) GetTrait(a engine.Actor, i interface{}) engine.Trait {
 	return w.traitDictionary.GetTrait(a.(*actor), i)
 }
 
-func (w *world) GetTraitsImplementing(a engine.Actor, i engine.Trait) []engine.Trait {
+func (w *world) GetTraitsImplementing(a engine.Actor, i interface{}) []engine.Trait {
 	return w.traitDictionary.GetTraitsImplementing(a.(*actor), i)
 }
 
-func (w *world) GetAllTraitsImplementing(i engine.Trait) []engine.Trait {
+func (w *world) GetAllTraitsImplementing(i interface{}) []engine.Trait {
 	return w.traitDictionary.GetAllTraitsImplementing(i)
 }
 

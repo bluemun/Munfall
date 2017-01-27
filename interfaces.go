@@ -7,15 +7,15 @@ package engine
 
 // Trait defines the interface that is used for marking Traits.
 type Trait interface {
+	Initialize(World, Actor, map[string]interface{})
 }
 
 // World defines the interface for the world struct.
 type World interface {
 	AddFrameEndTask(f func())
-	CreateActor(traits ...func() Trait) Actor
-	GetTrait(a Actor, i Trait) Trait
-	GetTraitsImplementing(a Actor, i Trait) []Trait
-	GetAllTraitsImplementing(i Trait) []Trait
+	GetTrait(a Actor, i interface{}) Trait
+	GetTraitsImplementing(a Actor, i interface{}) []Trait
+	GetAllTraitsImplementing(i interface{}) []Trait
 	RemoveActor(a Actor)
 	ResolveOrder(order *Order)
 	Tick(deltaUnit float32)

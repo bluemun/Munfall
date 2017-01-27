@@ -21,6 +21,7 @@ var mainHasRun = false
 
 // Game type used to gold all the components needed to run a game.
 type Game struct {
+	actorRegistry  *logic.ActorRegistry
 	Camera         *render.Camera
 	orderGenerator input.OrderGenerator
 	renderer       render.RendersTraits
@@ -38,6 +39,7 @@ func (g *Game) Initialize() {
 		}()
 	}
 
+	g.actorRegistry = logic.CreateActorRegistry()
 	g.window = graphics.CreateWindow()
 	g.Camera = &render.Camera{}
 	g.Camera.Activate()
@@ -48,18 +50,19 @@ func (g *Game) Initialize() {
 	g.renderer = render.CreateRendersTraits2D(g.world)
 }
 
-// Start starts the game loop, doesn't return untill the game is closed.
+// Start starts the game loop.
 func (g *Game) Start(framerate int64) {
-	render := time.NewTicker(time.Second / (time.Duration)(framerate))
-	update := time.NewTicker(time.Second / (time.Duration)(framerate))
+	ticker := time.NewTicker(time.Second / (time.Duration)(framerate))
 
 	for {
 		select {
-		case <-render.C:
-			g.window.Clear()
-			g.renderer.Render()
-			g.window.SwapBuffers()
-		case <-update.C:
+		case <-ticker.C:
+			if g.window.Closed() {
+				ticker.Stop()
+				close(engine.Mainfunc)
+				return
+			}
+
 			g.world.Tick(1.0 / (float32)(framerate))
 			g.window.PollEvents()
 			if g.orderGenerator != nil {
@@ -68,11 +71,9 @@ func (g *Game) Start(framerate int64) {
 				}
 			}
 
-			if g.window.Closed() {
-				render.Stop()
-				update.Stop()
-				close(engine.Mainfunc)
-			}
+			g.window.Clear()
+			g.renderer.Render()
+			g.window.SwapBuffers()
 		}
 	}
 }
@@ -85,6 +86,11 @@ func (g *Game) SetOrderGenerator(og input.OrderGenerator) {
 			g.orderGenerator.HandleKey(code, action == glfw.Press)
 		}
 	})
+}
+
+// ActorRegistry returns the inner actor registry for the game..
+func (g *Game) ActorRegistry() *logic.ActorRegistry {
+	return g.actorRegistry
 }
 
 // World returns the underlying world.
