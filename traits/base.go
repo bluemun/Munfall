@@ -11,10 +11,12 @@ import (
 
 // TraitTicker is a trait that gets called every time the world ticks.
 type TraitTicker interface {
+	munfall.Trait
 	Tick(deltaUnit float32)
 }
 
 // TraitOrderResolver used by traits to resolve orders sent by an order generator.
 type TraitOrderResolver interface {
+	munfall.Trait
 	ResolveOrder(order *munfall.Order)
 }

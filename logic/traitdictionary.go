@@ -39,17 +39,17 @@ func (td *traitDictionary) addTrait(a *actor, t munfall.Trait) {
 		td.traits[traittype] = at
 	}
 
-	traits, exist := at[a.GetActorID()]
+	traits, exist := at[a.ActorID()]
 	if !exist {
-		at[a.GetActorID()] = []munfall.Trait{t}
+		at[a.ActorID()] = []munfall.Trait{t}
 	} else {
-		at[a.GetActorID()] = append(traits, t)
+		at[a.ActorID()] = append(traits, t)
 	}
 }
 
 func (td *traitDictionary) removeActor(a *actor) {
 	for _, at := range td.traits {
-		delete(at, a.GetActorID())
+		delete(at, a.ActorID())
 	}
 }
 
@@ -58,10 +58,10 @@ func (td *traitDictionary) removeActor(a *actor) {
 func (td *traitDictionary) GetTrait(a *actor, i interface{}) munfall.Trait {
 	t := reflect.TypeOf(i)
 	munfall.Logger.Info(td.traits[t])
-	munfall.Logger.Info(a.GetActorID())
-	traits, exists := td.traits[t][a.GetActorID()]
+	munfall.Logger.Info(a.ActorID())
+	traits, exists := td.traits[t][a.ActorID()]
 	if !exists || len(traits) != 1 {
-		munfall.Logger.Panic("Trait", t, "doesnt exist on actor", a.GetActorID())
+		munfall.Logger.Panic("Trait", t, "doesnt exist on actor", a.ActorID())
 	}
 
 	return traits[0]
@@ -73,8 +73,8 @@ func (td *traitDictionary) GetTraitsImplementing(a *actor, i interface{}) []munf
 	out := make([]munfall.Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
 	for traitType, actorMap := range td.traits {
-		munfall.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", a.GetActorID(), ":", actorMap)
-		traits, exists := actorMap[a.GetActorID()]
+		munfall.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", a.ActorID(), ":", actorMap)
+		traits, exists := actorMap[a.ActorID()]
 		if exists && traitType.Implements(requiredType) {
 			for _, trait := range traits {
 				out = append(out, trait)

@@ -14,14 +14,15 @@ import (
 type world struct {
 	actors          map[uint]*actor
 	traitDictionary *traitDictionary
-	nextActorID     uint
 	endtasks        []func()
+	wm              munfall.WorldMap
 }
 
 // CreateWorld creates and initializes the World.
-func CreateWorld() munfall.World {
-	world := &world{actors: make(map[uint]*actor, 10), endtasks: nil}
+func CreateWorld(wm munfall.WorldMap) munfall.World {
+	world := &world{actors: make(map[uint]*actor, 10), endtasks: nil, wm: wm}
 	world.traitDictionary = createTraitDictionary(world)
+	wm.Initialize(world)
 	return (munfall.World)(world)
 }
 
@@ -42,23 +43,19 @@ func (w *world) GetAllTraitsImplementing(i interface{}) []munfall.Trait {
 	return w.traitDictionary.GetAllTraitsImplementing(i)
 }
 
-// RemoveActor removes the given actor from the world.
-func (w *world) RemoveActor(a munfall.Actor) {
-	if a == nil {
-		panic("Trying to remove nil as an Actor!")
-	}
-
-	notify := w.traitDictionary.GetTraitsImplementing(a.(*actor), (*traits.TraitRemovedNotifier)(nil))
-	w.traitDictionary.removeActor(a.(*actor))
-	delete(w.actors, a.GetActorID())
-	for _, trait := range notify {
-		trait.(traits.TraitRemovedNotifier).NotifyRemoved(a)
+// IssueGlobalOrder issues an order to be resolved by every TraitOrderResolver.
+func (w *world) IssueGlobalOrder(order *munfall.Order) {
+	order.IsGlobal = true
+	resolvers := w.traitDictionary.GetAllTraitsImplementing((*traits.TraitOrderResolver)(nil))
+	for _, trait := range resolvers {
+		trait.(traits.TraitOrderResolver).ResolveOrder(order)
 	}
 }
 
-// ResolveOrder bla.
-func (w *world) ResolveOrder(order *munfall.Order) {
-	resolvers := w.traitDictionary.GetAllTraitsImplementing((*traits.TraitOrderResolver)(nil))
+// IssueOrder issues an order to be resolved by every TraitOrderResolver on a given Actor.
+func (w *world) IssueOrder(a munfall.Actor, order *munfall.Order) {
+	order.IsGlobal = false
+	resolvers := w.traitDictionary.GetTraitsImplementing(a.(*actor), (*traits.TraitOrderResolver)(nil))
 	for _, trait := range resolvers {
 		trait.(traits.TraitOrderResolver).ResolveOrder(order)
 	}
@@ -76,4 +73,31 @@ func (w *world) Tick(deltaUnit float32) {
 	}
 
 	w.endtasks = nil
+}
+
+func (w *world) AddToWorld(a munfall.Actor) {
+	actor := a.(*actor)
+	w.actors[a.ActorID()] = actor
+
+	w.wm.Register(a)
+	notify := w.GetTraitsImplementing(a, (*traits.TraitAddedNotifier)(nil))
+	for _, trait := range notify {
+		trait.(traits.TraitAddedNotifier).NotifyAdded((munfall.Actor)(a))
+	}
+}
+
+func (w *world) RemoveFromWorld(a munfall.Actor) {
+	if a == nil {
+		panic("Trying to remove nil as an Actor!")
+	}
+
+	w.wm.Deregister(a)
+	notify := w.traitDictionary.GetTraitsImplementing(a.(*actor), (*traits.TraitRemovedNotifier)(nil))
+	for _, trait := range notify {
+		trait.(traits.TraitRemovedNotifier).NotifyRemoved(a)
+	}
+}
+
+func (w *world) WorldMap() munfall.WorldMap {
+	return w.wm
 }

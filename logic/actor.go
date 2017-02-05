@@ -22,10 +22,14 @@ func (a *actor) World() munfall.World {
 }
 
 // GetActorID gets the actor id of this actor.
-func (a *actor) GetActorID() uint {
+func (a *actor) ActorID() uint {
 	return a.actorID
 }
 
 func (a *actor) Pos() *munfall.WPos {
 	return a.pos
+}
+
+func (a *actor) SetPos(pos *munfall.WPos) {
+	a.pos = pos
 }

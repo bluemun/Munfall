@@ -8,8 +8,9 @@ package munfall
 
 // Order wraps an order that gets passed around by the order generator.
 type Order struct {
-	Order string
-	Value interface{}
+	Order    string
+	Value    interface{}
+	IsGlobal bool
 }
 
 // Mesh type used to hold rendering data.
@@ -18,9 +19,23 @@ type Mesh struct {
 	Triangles []uint32
 }
 
+// MPos map position.
+type MPos struct {
+	X, Y uint
+}
+
 // WPos world position.
 type WPos struct {
 	X, Y, Z float32
+}
+
+// Add returns a WPos that is the sup of the 2 given WPos.
+func (w *WPos) Add(other *WPos) *WPos {
+	return &WPos{
+		X: w.X + other.X,
+		Y: w.Y + other.Y,
+		Z: w.Z + other.Z,
+	}
 }
 
 // Vector returns the vector between the two provided WPos

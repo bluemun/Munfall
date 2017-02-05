@@ -7,59 +7,42 @@
 package traits
 
 import (
-	"math"
-
 	"github.com/bluemun/munfall"
 )
 
-// Space defines a space that can be used to
-type Space interface {
-	Offset() *munfall.WPos
-	Intersects(other Space) bool
+// SpaceCell defines a Space that is a full cell.
+type SpaceCell struct {
+	trait munfall.Trait
+
+	LocalOffset *munfall.WPos
 }
 
-// SpaceRect defines a Space that is a rectangle.
-type SpaceRect struct {
-	LocalOffset *munfall.WPos
-	HalfWidth   float32
-	HalfHeight  float32
+// Initialize called when this space is created.
+func (s *SpaceCell) Initialize(trait munfall.Trait) {
+	s.trait = trait
+}
+
+// Trait returns the trait the owns this Space
+func (s *SpaceCell) Trait() munfall.Trait {
+	return s.trait
 }
 
 // Offset returns the centered offset of this space relative to the actor position.
-func (sr *SpaceRect) Offset() *munfall.WPos {
-	return sr.LocalOffset
+func (s *SpaceCell) Offset() *munfall.WPos {
+	return s.LocalOffset.Add(s.trait.Owner().Pos())
 }
 
 // Intersects returns if the two spaces intersect.
-func (sr *SpaceRect) Intersects(other Space) bool {
-	srpos := ((Space)(sr)).(munfall.Trait).Owner().Pos()
-	otherpos := other.(munfall.Trait).Owner().Pos()
-	sroff := sr.Offset()
-	otheroff := other.Offset()
-
-	srpos.X += sroff.X
-	srpos.Y += sroff.Y
-	srpos.Z += sroff.Z
-
-	otherpos.X += otheroff.X
-	otherpos.Y += otheroff.Y
-	otherpos.Z += otheroff.Z
-
-	// Checks intersection if other is a SpaceRect.
-	osr, defined := other.(*SpaceRect)
-	if defined {
-		diff := srpos.Vector(otherpos)
-		if math.Abs(float64(diff.X)) < float64(sr.HalfWidth+osr.HalfWidth) ||
-			math.Abs(float64(diff.Y)) < float64(sr.HalfHeight+osr.HalfHeight) {
-			return true
-		}
-	}
-
-	return false
+func (s *SpaceCell) Intersects(other munfall.Space) bool {
+	mpos1 := s.trait.Owner().World().WorldMap().ConvertToMPos(s.Offset())
+	mpos2 := s.trait.Owner().World().WorldMap().ConvertToMPos(other.Offset())
+	return *mpos1 == *mpos2
 }
 
 // OccupySpace defines a trait that occupies space and should collide with
 // other actors that have an OccupySpace trait.
 type OccupySpace interface {
-	Space() []*Space
+	munfall.Trait
+	Intersects(OccupySpace) bool
+	Space() []munfall.Space
 }

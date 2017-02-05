@@ -6,24 +6,30 @@
 package gridworldmap
 
 import (
+	"sort"
+
 	"github.com/bluemun/munfall"
-	"github.com/bluemun/munfall/worldmap"
+	"github.com/bluemun/munfall/traits"
 )
 
 type worldMap2DGrid struct {
+	world           munfall.World
 	cWidth, cHeight float32
 	width, height   uint
 	grid            []*cell2DRectGrid
 }
 
-// CreateGridWorldMap creates a 2D implementation of a WorldMap.
-func CreateGridWorldMap(width, height uint, cellWidth, cellHeight float32) worldmap.WorldMap {
+// CreateGridWorldMap creates a 2D implementation of a munfall.
+func CreateGridWorldMap(width, height uint, cellWidth, cellHeight float32) munfall.WorldMap {
 	grid := make([]*cell2DRectGrid, 0, width*height)
 
 	var init uint
 	for y := init; y < height; y++ {
 		for x := init; x < width; x++ {
-			grid[x+y*width] = &cell2DRectGrid{pos: &worldmap.MPos{X: x, Y: y}}
+			grid[x+y*width] = &cell2DRectGrid{
+				space: make([]munfall.Space, 0),
+				pos:   &munfall.MPos{X: x, Y: y},
+			}
 		}
 	}
 
@@ -53,20 +59,140 @@ func CreateGridWorldMap(width, height uint, cellWidth, cellHeight float32) world
 	}
 }
 
-func (wm *worldMap2DGrid) CellAt(pos *worldmap.MPos) worldmap.Cell {
+func (wm *worldMap2DGrid) Initialize(world munfall.World) {
+	wm.world = world
+}
+
+func (wm *worldMap2DGrid) CellAt(pos *munfall.MPos) munfall.Cell {
 	return wm.grid[pos.X+pos.Y*wm.width]
 }
 
-func (wm *worldMap2DGrid) GetPath(p1, p2 *worldmap.MPos) worldmap.Path {
-	return nil
+func (wm *worldMap2DGrid) CreatePath(positions []*munfall.WPos) munfall.Path {
+	path := &path2DGrid{
+		m:    wm,
+		cell: wm.CellAt(wm.ConvertToMPos(positions[0])).(*cell2DRectGrid),
+	}
+	path.first = path
+	for _, pos := range positions[1:] {
+		cell := wm.CellAt(wm.ConvertToMPos(pos)).(*cell2DRectGrid)
+		npath := &path2DGrid{
+			m:     wm,
+			cell:  cell,
+			first: path.first,
+		}
+		path.next = npath
+		path = npath
+	}
+
+	iter := path.First().(*path2DGrid)
+	for {
+		iter.last = path
+		if iter.next == nil {
+			break
+		}
+	}
+
+	return path.First()
 }
 
-func (wm *worldMap2DGrid) ConvertToWPos(m *worldmap.MPos) *munfall.WPos {
+func (wm *worldMap2DGrid) GetPath(a munfall.Actor, p1, p2 *munfall.MPos) munfall.Path {
+	path := &path2DGrid{
+		m:    wm,
+		cell: wm.CellAt(p1).(*cell2DRectGrid),
+	}
+	path.first = path
+
+	lastCell := wm.CellAt(p2).(*cell2DRectGrid)
+	ts := wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil))
+	intersects := false
+Outer:
+	for _, trait := range ts {
+		os := trait.(traits.OccupySpace)
+		for _, space := range lastCell.Space() {
+			spacetrait := space.Trait().(traits.OccupySpace)
+			if spacetrait.Owner().ActorID() != os.Owner().ActorID() && os.Intersects(spacetrait) {
+				intersects = true
+				break Outer
+			}
+		}
+	}
+
+	if lastCell == path.cell || intersects {
+		path.last = path
+	} else {
+		path.last = &path2DGrid{
+			m:     wm,
+			cell:  lastCell,
+			first: path,
+		}
+		path.last.last = path.last
+		path.next = path.last
+	}
+
+	return path
+}
+
+func (wm *worldMap2DGrid) InsideMapWPos(pos *munfall.WPos) bool {
+	return pos.X < float32(wm.width)*wm.cWidth && pos.X >= 0 &&
+		pos.Y < float32(wm.height)*wm.cHeight && pos.Y >= 0
+}
+
+func (wm *worldMap2DGrid) InsideMapMPos(pos *munfall.MPos) bool {
+	return pos.X < wm.width && pos.X >= 0 &&
+		pos.Y < wm.height && pos.Y >= 0
+}
+
+func (wm *worldMap2DGrid) ConvertToWPos(m *munfall.MPos) *munfall.WPos {
 	return &munfall.WPos{X: wm.cWidth * float32(m.X), Y: wm.cHeight * float32(m.Y)}
 }
 
-func (wm *worldMap2DGrid) ConvertToMPos(w *munfall.WPos) *worldmap.MPos {
-	return &worldmap.MPos{X: uint(w.X / wm.cWidth), Y: uint(w.Y / wm.cHeight)}
+func (wm *worldMap2DGrid) ConvertToMPos(w *munfall.WPos) *munfall.MPos {
+	return &munfall.MPos{X: uint(w.X / wm.cWidth), Y: uint(w.Y / wm.cHeight)}
+}
+
+func (wm *worldMap2DGrid) Register(a munfall.Actor) {
+	for _, trait := range wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil)) {
+		os := trait.(traits.OccupySpace)
+		for _, space := range os.Space() {
+			cell := wm.CellAt(wm.ConvertToMPos(space.Offset())).(*cell2DRectGrid)
+			cell.AddSpace(space)
+		}
+	}
+}
+
+func (wm *worldMap2DGrid) Move(a munfall.Actor, p munfall.Path, percent float32) {
+	path, exists := p.(*path2DGrid)
+	if !exists {
+		munfall.Logger.Panic("Tried using", p, "on a GridWorldMap, it requires a *path2DGrid type.")
+	}
+
+	for _, trait := range wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil)) {
+		os := trait.(traits.OccupySpace)
+		for _, space := range os.Space() {
+			cell := wm.CellAt(wm.ConvertToMPos(space.Offset())).(*cell2DRectGrid)
+			cell.RemoveSpace(space)
+		}
+	}
+
+	a.SetPos(path.WPos(percent))
+
+	for _, trait := range wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil)) {
+		os := trait.(traits.OccupySpace)
+		for _, space := range os.Space() {
+			cell := wm.CellAt(wm.ConvertToMPos(space.Offset())).(*cell2DRectGrid)
+			cell.AddSpace(space)
+		}
+	}
+}
+
+func (wm *worldMap2DGrid) Deregister(a munfall.Actor) {
+	for _, trait := range wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil)) {
+		os := trait.(traits.OccupySpace)
+		for _, space := range os.Space() {
+			cell := wm.CellAt(wm.ConvertToMPos(space.Offset())).(*cell2DRectGrid)
+			cell.RemoveSpace(space)
+		}
+	}
 }
 
 type path2DGrid struct {
@@ -78,11 +204,11 @@ type path2DGrid struct {
 	next *path2DGrid
 }
 
-func (p *path2DGrid) Cell() worldmap.Cell {
+func (p *path2DGrid) Cell() munfall.Cell {
 	return p.cell
 }
 
-func (p *path2DGrid) MPos() *worldmap.MPos {
+func (p *path2DGrid) MPos() *munfall.MPos {
 	return p.cell.pos
 }
 
@@ -103,28 +229,76 @@ func (p *path2DGrid) IsEnd() bool {
 	return p.next == nil
 }
 
-func (p *path2DGrid) Next() worldmap.Path {
+func (p *path2DGrid) Next() munfall.Path {
 	return p.next
 }
 
-func (p *path2DGrid) First() worldmap.Path {
+func (p *path2DGrid) First() munfall.Path {
 	return p.first
 }
 
-func (p *path2DGrid) Last() worldmap.Path {
+func (p *path2DGrid) Last() munfall.Path {
 	return p.last
 }
 
 type cell2DRectGrid struct {
-	pos            *worldmap.MPos
+	pos            *munfall.MPos
 	lc, rc, tc, bc *cell2DRectGrid
+	space          []munfall.Space
 }
 
-func (c *cell2DRectGrid) AdjacentCells() []worldmap.Cell {
-	cells := make([]worldmap.Cell, 4)
+func (c *cell2DRectGrid) AdjacentCells() []munfall.Cell {
+	cells := make([]munfall.Cell, 4)
 	cells[0] = c.lc
 	cells[0] = c.rc
 	cells[0] = c.tc
 	cells[0] = c.bc
 	return cells
+}
+
+func (c *cell2DRectGrid) Space() []munfall.Space {
+	return c.space
+}
+
+func (c *cell2DRectGrid) AddSpace(s munfall.Space) {
+	length := len(c.space)
+	id := s.Trait().Owner().ActorID()
+
+	if length == 0 {
+		c.space = make([]munfall.Space, 1)
+		c.space[0] = s
+		return
+	}
+
+	i := sort.Search(length, func(i int) bool {
+		return id == c.space[i].Trait().Owner().ActorID()
+	})
+
+	if i == length {
+		slice := make([]munfall.Space, 1)
+		slice[0] = s
+		c.space = append(slice, c.space...)
+	} else if i == length-1 {
+		c.space = append(c.space, s)
+	} else {
+		c.space = append(c.space, nil)
+		copy(c.space[i+1:], c.space[i:])
+		c.space[i] = s
+	}
+}
+
+func (c *cell2DRectGrid) RemoveSpace(s munfall.Space) {
+	length := len(c.space)
+	id := s.Trait().Owner().ActorID()
+	index := sort.Search(length, func(arg2 int) bool {
+		return id == c.space[arg2].Trait().Owner().ActorID()
+	})
+
+	if index == -1 {
+		return
+	} else if length == 1 {
+		c.space = make([]munfall.Space, 0)
+	} else {
+		c.space = append(c.space[:index-1], c.space[index+1:]...)
+	}
 }

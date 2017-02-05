@@ -11,15 +11,18 @@ import (
 
 // TraitAddedNotifier is a trait that gets notified when it is added to the world.
 type TraitAddedNotifier interface {
+	munfall.Trait
 	NotifyAdded(owner munfall.Actor)
 }
 
 // TraitRemovedNotifier is a trait that gets notified when it is removed from the world.
 type TraitRemovedNotifier interface {
+	munfall.Trait
 	NotifyRemoved(owner munfall.Actor)
 }
 
 // MoveNotifier is called when an Actor is moved on the map.
 type MoveNotifier interface {
+	munfall.Trait
 	NotifyMove(old, new *munfall.WPos)
 }

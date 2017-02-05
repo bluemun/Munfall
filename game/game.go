@@ -14,7 +14,6 @@ import (
 	"github.com/bluemun/munfall/graphics/render"
 	"github.com/bluemun/munfall/input"
 	"github.com/bluemun/munfall/logic"
-	"github.com/bluemun/munfall/worldmap"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -28,11 +27,10 @@ type Game struct {
 	renderer       render.RendersTraits
 	window         *graphics.Window
 	world          munfall.World
-	worldMap       worldmap.WorldMap
 }
 
 // Initialize initializes the game.
-func (g *Game) Initialize(wm worldmap.WorldMap) {
+func (g *Game) Initialize(wm munfall.WorldMap) {
 	if !mainHasRun {
 		mainHasRun = true
 		go func() {
@@ -46,8 +44,7 @@ func (g *Game) Initialize(wm worldmap.WorldMap) {
 	g.Camera = &render.Camera{}
 	g.Camera.Activate()
 
-	g.world = logic.CreateWorld()
-	g.worldMap = wm
+	g.world = logic.CreateWorld(wm)
 
 	// TODO: Change this once we got more renderers.
 	g.renderer = render.CreateRendersTraits2D(g.world)
@@ -70,7 +67,7 @@ func (g *Game) Start(framerate int64) {
 			g.window.PollEvents()
 			if g.orderGenerator != nil {
 				for _, order := range g.orderGenerator.GetOrders() {
-					g.world.ResolveOrder(order)
+					g.world.IssueGlobalOrder(order)
 				}
 			}
 
@@ -99,4 +96,9 @@ func (g *Game) ActorRegistry() *logic.ActorRegistry {
 // World returns the underlying world.
 func (g *Game) World() munfall.World {
 	return g.world
+}
+
+// WorldMap returns the underlying worldmap.
+func (g *Game) WorldMap() munfall.WorldMap {
+	return g.world.WorldMap()
 }

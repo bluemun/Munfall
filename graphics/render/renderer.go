@@ -147,12 +147,12 @@ func (r *renderer2d) DrawRectangle(x, y, w, h float32, color uint32) {
 // Submit adds the given Renderable to this draw call.
 func (r *renderer2d) Submit(ra munfall.Renderable) {
 	mesh := ra.Mesh()
-	x, y := ra.Pos()
+	pos := ra.Pos()
 	color := float32(ra.Color())
 
 	var vertices []float32
 	for i := 0; i < len(mesh.Points); i += 3 {
-		vertices = append(vertices, mesh.Points[i]+x, mesh.Points[i+1]+y, mesh.Points[i+2], color)
+		vertices = append(vertices, mesh.Points[i]+pos.X, mesh.Points[i+1]+pos.Y, mesh.Points[i+2], color)
 	}
 	var indices []uint32
 	for i := 0; i < len(mesh.Triangles); i++ {

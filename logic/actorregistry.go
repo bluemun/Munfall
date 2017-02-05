@@ -9,7 +9,6 @@ import (
 	"reflect"
 
 	"github.com/bluemun/munfall"
-	"github.com/bluemun/munfall/traits"
 )
 
 // ActorDefinition holds all the information needed to make an Actor.
@@ -53,6 +52,7 @@ type TraitCreate struct {
 
 // ActorRegistry contains definitions for actors.
 type ActorRegistry struct {
+	nextID      uint
 	definitions map[string]reflect.Type
 	builders    map[string]*ActorDefinition
 }
@@ -69,13 +69,12 @@ func CreateActorRegistry() *ActorRegistry {
 
 // CreateActor creates an actor in the given world by using the trait parameters
 // registered to the given name and the provided runtime parameters.
-func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]interface{}, w munfall.World) {
+func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]interface{}, w munfall.World, addToWorld bool) munfall.Actor {
 	world := w.(*world)
 	params := ar.builders[name]
 
-	a := &actor{actorID: world.nextActorID, world: world}
-	world.actors[world.nextActorID] = a
-	world.nextActorID++
+	a := &actor{actorID: ar.nextID, world: world}
+	ar.nextID++
 
 	for name, parameter := range params.parameters {
 		obj := reflect.New(ar.definitions[name])
@@ -101,10 +100,17 @@ func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]i
 		world.traitDictionary.addTrait(a, trait)
 	}
 
-	notify := world.GetTraitsImplementing(a, (*traits.TraitAddedNotifier)(nil))
-	for _, trait := range notify {
-		trait.(traits.TraitAddedNotifier).NotifyAdded((munfall.Actor)(a))
+	if addToWorld {
+		world.AddToWorld(a)
 	}
+
+	return a
+}
+
+// DisposeActor disposes of all the traits from the world.
+func (ar *ActorRegistry) DisposeActor(a munfall.Actor, w munfall.World) {
+	world := w.(*world)
+	world.RemoveFromWorld(a)
 }
 
 // RegisterTrait adds a trait type as a candidate for creation, panics if it already exists.
