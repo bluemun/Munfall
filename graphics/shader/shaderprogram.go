@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 	"github.com/go-gl/gl/v3.3-core/gl"
 )
 
@@ -23,13 +23,13 @@ func CreateShader(vertexShaderSource, fragmentShaderSource string) *Shader {
 
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
-		engine.Logger.Panic("Failed to compile vertex shader: ", err)
+		munfall.Logger.Panic("Failed to compile vertex shader: ", err)
 		return nil
 	}
 
 	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
 	if err != nil {
-		engine.Logger.Panic("Failed to compile fragment shader: ", err)
+		munfall.Logger.Panic("Failed to compile fragment shader: ", err)
 		return nil
 	}
 
@@ -48,7 +48,7 @@ func CreateShader(vertexShaderSource, fragmentShaderSource string) *Shader {
 		log := strings.Repeat("\x00", int(logLength+1))
 		gl.GetProgramInfoLog(program, logLength, nil, gl.Str(log))
 
-		engine.Logger.Panic("Failed to link shader program: ", err)
+		munfall.Logger.Panic("Failed to link shader program: ", err)
 		return nil
 	}
 
@@ -85,12 +85,12 @@ func compileShader(source string, shaderType uint32) (uint32, error) {
 // Use Sets this shader as the active one.
 func (s *Shader) Use() {
 	gl.UseProgram((uint32)(*s))
-	engine.CheckGLError()
+	munfall.CheckGLError()
 }
 
 // GetAttributeLocation Gets the location of the variable name in the shader.
 func (s *Shader) GetAttributeLocation(name string) uint32 {
-	defer engine.CheckGLError()
+	defer munfall.CheckGLError()
 	return uint32(gl.GetAttribLocation((uint32)(*s), gl.Str(name+"\x00")))
 }
 
@@ -98,7 +98,7 @@ func (s *Shader) GetAttributeLocation(name string) uint32 {
 func (s *Shader) GetUniformLocation(name string) int32 {
 	loc := gl.GetUniformLocation((uint32)(*s), gl.Str(name+"\x00"))
 	if loc == -1 {
-		engine.Logger.Info("Fetching location of uniform", name, "from shader", (uint32)(*s), "failed.")
+		munfall.Logger.Info("Fetching location of uniform", name, "from shader", (uint32)(*s), "failed.")
 	}
 	return loc
 }

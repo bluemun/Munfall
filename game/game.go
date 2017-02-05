@@ -9,12 +9,12 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/bluemun/engine"
-	"github.com/bluemun/engine/graphics"
-	"github.com/bluemun/engine/graphics/render"
-	"github.com/bluemun/engine/input"
-	"github.com/bluemun/engine/logic"
-	"github.com/bluemun/engine/worldmap"
+	"github.com/bluemun/munfall"
+	"github.com/bluemun/munfall/graphics"
+	"github.com/bluemun/munfall/graphics/render"
+	"github.com/bluemun/munfall/input"
+	"github.com/bluemun/munfall/logic"
+	"github.com/bluemun/munfall/worldmap"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -27,7 +27,7 @@ type Game struct {
 	orderGenerator input.OrderGenerator
 	renderer       render.RendersTraits
 	window         *graphics.Window
-	world          engine.World
+	world          munfall.World
 	worldMap       worldmap.WorldMap
 }
 
@@ -37,7 +37,7 @@ func (g *Game) Initialize(wm worldmap.WorldMap) {
 		mainHasRun = true
 		go func() {
 			runtime.LockOSThread()
-			engine.Loop()
+			munfall.Loop()
 		}()
 	}
 
@@ -62,7 +62,7 @@ func (g *Game) Start(framerate int64) {
 		case <-ticker.C:
 			if g.window.Closed() {
 				ticker.Stop()
-				close(engine.Mainfunc)
+				close(munfall.Mainfunc)
 				return
 			}
 
@@ -97,6 +97,6 @@ func (g *Game) ActorRegistry() *logic.ActorRegistry {
 }
 
 // World returns the underlying world.
-func (g *Game) World() engine.World {
+func (g *Game) World() munfall.World {
 	return g.world
 }

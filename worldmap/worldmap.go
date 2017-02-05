@@ -6,22 +6,22 @@
 package worldmap
 
 import (
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // WorldMap is the interface for the world map.
 type WorldMap interface {
 	CellAt(pos *MPos) Cell
 	GetPath(p1, p2 *MPos) Path
-	ConvertToWPos(m *MPos) *engine.WPos
-	ConvertToMPos(w *engine.WPos) *MPos
+	ConvertToWPos(m *MPos) *munfall.WPos
+	ConvertToMPos(w *munfall.WPos) *MPos
 }
 
 // Path is an iterator that defines a path through the world map.
 type Path interface {
 	Cell() Cell
 	MPos() *MPos
-	WPos(percent float32) *engine.WPos
+	WPos(percent float32) *munfall.WPos
 
 	IsEnd() bool
 	Next() Path

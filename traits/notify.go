@@ -6,20 +6,20 @@
 package traits
 
 import (
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // TraitAddedNotifier is a trait that gets notified when it is added to the world.
 type TraitAddedNotifier interface {
-	NotifyAdded(owner engine.Actor)
+	NotifyAdded(owner munfall.Actor)
 }
 
 // TraitRemovedNotifier is a trait that gets notified when it is removed from the world.
 type TraitRemovedNotifier interface {
-	NotifyRemoved(owner engine.Actor)
+	NotifyRemoved(owner munfall.Actor)
 }
 
 // MoveNotifier is called when an Actor is moved on the map.
 type MoveNotifier interface {
-	NotifyMove(old, new *engine.WPos)
+	NotifyMove(old, new *munfall.WPos)
 }

@@ -6,11 +6,11 @@
 package traits
 
 import (
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // TraitRender2D called by TraitRenderManager to get renderables
 // for rendering (2D implementation).
 type TraitRender2D interface {
-	Render2D() []engine.Renderable
+	Render2D() []munfall.Renderable
 }

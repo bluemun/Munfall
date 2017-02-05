@@ -6,8 +6,8 @@
 package render
 
 import (
-	"github.com/bluemun/engine"
-	"github.com/bluemun/engine/traits"
+	"github.com/bluemun/munfall"
+	"github.com/bluemun/munfall/traits"
 )
 
 // RendersTraits defines a collection of objects that can be used in conjunction
@@ -17,12 +17,12 @@ type RendersTraits interface {
 }
 
 type renderTraits2d struct {
-	world    engine.World
+	world    munfall.World
 	renderer Renderer
 }
 
 // CreateRendersTraits2D creates a 2D implementation of RendersTraits.
-func CreateRendersTraits2D(w engine.World) RendersTraits {
+func CreateRendersTraits2D(w munfall.World) RendersTraits {
 	return &renderTraits2d{world: w, renderer: CreateRenderer2D(10000, 10000)}
 }
 

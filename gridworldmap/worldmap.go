@@ -6,8 +6,8 @@
 package gridworldmap
 
 import (
-	"github.com/bluemun/engine"
-	"github.com/bluemun/engine/worldmap"
+	"github.com/bluemun/munfall"
+	"github.com/bluemun/munfall/worldmap"
 )
 
 type worldMap2DGrid struct {
@@ -61,11 +61,11 @@ func (wm *worldMap2DGrid) GetPath(p1, p2 *worldmap.MPos) worldmap.Path {
 	return nil
 }
 
-func (wm *worldMap2DGrid) ConvertToWPos(m *worldmap.MPos) *engine.WPos {
-	return &engine.WPos{X: wm.cWidth * float32(m.X), Y: wm.cHeight * float32(m.Y)}
+func (wm *worldMap2DGrid) ConvertToWPos(m *worldmap.MPos) *munfall.WPos {
+	return &munfall.WPos{X: wm.cWidth * float32(m.X), Y: wm.cHeight * float32(m.Y)}
 }
 
-func (wm *worldMap2DGrid) ConvertToMPos(w *engine.WPos) *worldmap.MPos {
+func (wm *worldMap2DGrid) ConvertToMPos(w *munfall.WPos) *worldmap.MPos {
 	return &worldmap.MPos{X: uint(w.X / wm.cWidth), Y: uint(w.Y / wm.cHeight)}
 }
 
@@ -86,13 +86,13 @@ func (p *path2DGrid) MPos() *worldmap.MPos {
 	return p.cell.pos
 }
 
-func (p *path2DGrid) WPos(percent float32) *engine.WPos {
+func (p *path2DGrid) WPos(percent float32) *munfall.WPos {
 	start := p.m.ConvertToWPos(p.cell.pos)
 	next := p.m.ConvertToWPos(p.next.cell.pos)
 	movement := start.Vector(next)
 
 	// TODO: Implement a heightmap somewhere so we can give a real z value here.
-	return &engine.WPos{
+	return &munfall.WPos{
 		X: start.X + movement.X*percent,
 		Y: start.Y * movement.Y * percent,
 		Z: 0,

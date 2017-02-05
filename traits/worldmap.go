@@ -9,31 +9,31 @@ package traits
 import (
 	"math"
 
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // Space defines a space that can be used to
 type Space interface {
-	Offset() *engine.WPos
+	Offset() *munfall.WPos
 	Intersects(other Space) bool
 }
 
 // SpaceRect defines a Space that is a rectangle.
 type SpaceRect struct {
-	LocalOffset *engine.WPos
+	LocalOffset *munfall.WPos
 	HalfWidth   float32
 	HalfHeight  float32
 }
 
 // Offset returns the centered offset of this space relative to the actor position.
-func (sr *SpaceRect) Offset() *engine.WPos {
+func (sr *SpaceRect) Offset() *munfall.WPos {
 	return sr.LocalOffset
 }
 
 // Intersects returns if the two spaces intersect.
 func (sr *SpaceRect) Intersects(other Space) bool {
-	srpos := ((Space)(sr)).(engine.Trait).Owner().Pos()
-	otherpos := other.(engine.Trait).Owner().Pos()
+	srpos := ((Space)(sr)).(munfall.Trait).Owner().Pos()
+	otherpos := other.(munfall.Trait).Owner().Pos()
 	sroff := sr.Offset()
 	otheroff := other.Offset()
 

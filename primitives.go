@@ -2,9 +2,9 @@
 // Use of this source code is governed by a MIT License
 // license that can be found in the LICENSE file.
 
-// Package engine Defines primitives that will be used all around the engine,
+// Package munfall Defines primitives that will be used all around the engine,
 // they are here to prevent circle imports.
-package engine
+package munfall
 
 // Order wraps an order that gets passed around by the order generator.
 type Order struct {

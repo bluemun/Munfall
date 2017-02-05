@@ -6,21 +6,26 @@
 package logic
 
 import (
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // Actor temp
 type actor struct {
 	actorID uint
 	world   *world
+	pos     *munfall.WPos
 }
 
 // World returns the world that this actor currently resides in.
-func (a *actor) World() engine.World {
-	return (engine.World)(a.world)
+func (a *actor) World() munfall.World {
+	return (munfall.World)(a.world)
 }
 
 // GetActorID gets the actor id of this actor.
 func (a *actor) GetActorID() uint {
 	return a.actorID
+}
+
+func (a *actor) Pos() *munfall.WPos {
+	return a.pos
 }

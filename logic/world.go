@@ -6,8 +6,8 @@
 package logic
 
 import (
-	"github.com/bluemun/engine"
-	"github.com/bluemun/engine/traits"
+	"github.com/bluemun/munfall"
+	"github.com/bluemun/munfall/traits"
 )
 
 // World container that manages the game world.
@@ -19,10 +19,10 @@ type world struct {
 }
 
 // CreateWorld creates and initializes the World.
-func CreateWorld() engine.World {
+func CreateWorld() munfall.World {
 	world := &world{actors: make(map[uint]*actor, 10), endtasks: nil}
 	world.traitDictionary = createTraitDictionary(world)
-	return (engine.World)(world)
+	return (munfall.World)(world)
 }
 
 // AddFrameEndTask adds a task that will be run at the end of the current tick.
@@ -30,20 +30,20 @@ func (w *world) AddFrameEndTask(f func()) {
 	w.endtasks = append(w.endtasks, f)
 }
 
-func (w *world) GetTrait(a engine.Actor, i interface{}) engine.Trait {
+func (w *world) GetTrait(a munfall.Actor, i interface{}) munfall.Trait {
 	return w.traitDictionary.GetTrait(a.(*actor), i)
 }
 
-func (w *world) GetTraitsImplementing(a engine.Actor, i interface{}) []engine.Trait {
+func (w *world) GetTraitsImplementing(a munfall.Actor, i interface{}) []munfall.Trait {
 	return w.traitDictionary.GetTraitsImplementing(a.(*actor), i)
 }
 
-func (w *world) GetAllTraitsImplementing(i interface{}) []engine.Trait {
+func (w *world) GetAllTraitsImplementing(i interface{}) []munfall.Trait {
 	return w.traitDictionary.GetAllTraitsImplementing(i)
 }
 
 // RemoveActor removes the given actor from the world.
-func (w *world) RemoveActor(a engine.Actor) {
+func (w *world) RemoveActor(a munfall.Actor) {
 	if a == nil {
 		panic("Trying to remove nil as an Actor!")
 	}
@@ -57,7 +57,7 @@ func (w *world) RemoveActor(a engine.Actor) {
 }
 
 // ResolveOrder bla.
-func (w *world) ResolveOrder(order *engine.Order) {
+func (w *world) ResolveOrder(order *munfall.Order) {
 	resolvers := w.traitDictionary.GetAllTraitsImplementing((*traits.TraitOrderResolver)(nil))
 	for _, trait := range resolvers {
 		trait.(traits.TraitOrderResolver).ResolveOrder(order)

@@ -2,8 +2,8 @@
 // Use of this source code is governed by a MIT License
 // license that can be found in the LICENSE file.
 
-// Package engine debug.go Defines our logging.
-package engine
+// Package munfall debug.go Defines our logging.
+package munfall
 
 import (
 	"os"

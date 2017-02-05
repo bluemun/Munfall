@@ -8,8 +8,8 @@ package logic
 import (
 	"reflect"
 
-	"github.com/bluemun/engine"
-	"github.com/bluemun/engine/traits"
+	"github.com/bluemun/munfall"
+	"github.com/bluemun/munfall/traits"
 )
 
 // ActorDefinition holds all the information needed to make an Actor.
@@ -37,7 +37,7 @@ func (ad *ActorDefinition) AddTrait(traitName string) {
 func (ad *ActorDefinition) AddParameter(traitName, parameterName string, value interface{}) {
 	traitParams, exists := ad.parameters[traitName]
 	if !exists {
-		engine.Logger.Panic("Tried adding a parameter to trait", traitName,
+		munfall.Logger.Panic("Tried adding a parameter to trait", traitName,
 			"on ActorDefinition", ad.Name, ": ActorDefinition does not define", traitName)
 	}
 
@@ -69,7 +69,7 @@ func CreateActorRegistry() *ActorRegistry {
 
 // CreateActor creates an actor in the given world by using the trait parameters
 // registered to the given name and the provided runtime parameters.
-func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]interface{}, w engine.World) {
+func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]interface{}, w munfall.World) {
 	world := w.(*world)
 	params := ar.builders[name]
 
@@ -80,8 +80,8 @@ func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]i
 	for name, parameter := range params.parameters {
 		obj := reflect.New(ar.definitions[name])
 
-		//engine.Logger.Info(obj)
-		trait := obj.Interface().(engine.Trait)
+		//munfall.Logger.Info(obj)
+		trait := obj.Interface().(munfall.Trait)
 
 		if runtimeParameters == nil {
 			trait.Initialize(w, a, parameter)
@@ -103,7 +103,7 @@ func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]i
 
 	notify := world.GetTraitsImplementing(a, (*traits.TraitAddedNotifier)(nil))
 	for _, trait := range notify {
-		trait.(traits.TraitAddedNotifier).NotifyAdded((engine.Actor)(a))
+		trait.(traits.TraitAddedNotifier).NotifyAdded((munfall.Actor)(a))
 	}
 }
 
@@ -111,7 +111,7 @@ func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]i
 func (ar *ActorRegistry) RegisterTrait(name string, t interface{}) {
 	_, exists := ar.definitions[name]
 	if exists {
-		engine.Logger.Panic("Trait:", name, "already exists in the trait registry.")
+		munfall.Logger.Panic("Trait:", name, "already exists in the trait registry.")
 	}
 
 	ar.definitions[name] = reflect.TypeOf(t).Elem()
@@ -122,7 +122,7 @@ func (ar *ActorRegistry) RegisterTrait(name string, t interface{}) {
 func (ar *ActorRegistry) RegisterActor(definition *ActorDefinition) {
 	_, exists := ar.builders[definition.Name]
 	if exists {
-		engine.Logger.Panic("An actor with the name", definition.Name, "has already been registered.")
+		munfall.Logger.Panic("An actor with the name", definition.Name, "has already been registered.")
 	}
 
 	ar.builders[definition.Name] = definition

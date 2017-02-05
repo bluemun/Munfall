@@ -2,8 +2,8 @@
 // Use of this source code is governed by a MIT License
 // license that can be found in the LICENSE file.
 
-// Package engine Defines methods used to run the engine.
-package engine
+// Package munfall Defines methods used to run the engine.
+package munfall
 
 import (
 	"time"

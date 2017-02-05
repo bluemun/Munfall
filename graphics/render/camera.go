@@ -7,7 +7,7 @@
 package render
 
 import (
-	"github.com/bluemun/engine/graphics/shader"
+	"github.com/bluemun/munfall/graphics/shader"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )

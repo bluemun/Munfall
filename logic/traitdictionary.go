@@ -9,39 +9,39 @@ package logic
 import (
 	"reflect"
 
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // TraitDictionary holds traits for easy lookup.
 type traitDictionary struct {
-	traits map[reflect.Type]map[uint][]engine.Trait
+	traits map[reflect.Type]map[uint][]munfall.Trait
 	world  *world
 }
 
 // CreateTraitDictionary creates and initializes the traitManager.
 func createTraitDictionary(w *world) *traitDictionary {
 	return &traitDictionary{
-		traits: make(map[reflect.Type]map[uint][]engine.Trait),
+		traits: make(map[reflect.Type]map[uint][]munfall.Trait),
 		world:  w,
 	}
 }
 
-func (td *traitDictionary) addTrait(a *actor, t engine.Trait) {
-	_, exists := t.(engine.Trait)
+func (td *traitDictionary) addTrait(a *actor, t munfall.Trait) {
+	_, exists := t.(munfall.Trait)
 	if !exists {
-		engine.Logger.Panic(t, "does not implement the Trait interface.")
+		munfall.Logger.Panic(t, "does not implement the Trait interface.")
 	}
 
 	traittype := reflect.TypeOf(t)
 	at, exist := td.traits[traittype]
 	if !exist {
-		at = make(map[uint][]engine.Trait)
+		at = make(map[uint][]munfall.Trait)
 		td.traits[traittype] = at
 	}
 
 	traits, exist := at[a.GetActorID()]
 	if !exist {
-		at[a.GetActorID()] = []engine.Trait{t}
+		at[a.GetActorID()] = []munfall.Trait{t}
 	} else {
 		at[a.GetActorID()] = append(traits, t)
 	}
@@ -55,13 +55,13 @@ func (td *traitDictionary) removeActor(a *actor) {
 
 // GetTrait gets the given trait from the actor, doesnt support inheritance and
 // panics if the trait doesn't exist.
-func (td *traitDictionary) GetTrait(a *actor, i interface{}) engine.Trait {
+func (td *traitDictionary) GetTrait(a *actor, i interface{}) munfall.Trait {
 	t := reflect.TypeOf(i)
-	engine.Logger.Info(td.traits[t])
-	engine.Logger.Info(a.GetActorID())
+	munfall.Logger.Info(td.traits[t])
+	munfall.Logger.Info(a.GetActorID())
 	traits, exists := td.traits[t][a.GetActorID()]
 	if !exists || len(traits) != 1 {
-		engine.Logger.Panic("Trait", t, "doesnt exist on actor", a.GetActorID())
+		munfall.Logger.Panic("Trait", t, "doesnt exist on actor", a.GetActorID())
 	}
 
 	return traits[0]
@@ -69,11 +69,11 @@ func (td *traitDictionary) GetTrait(a *actor, i interface{}) engine.Trait {
 
 // GetTraitsImplementing gets all the traits on the given actor that implement
 // the given Trait interface.
-func (td *traitDictionary) GetTraitsImplementing(a *actor, i interface{}) []engine.Trait {
-	out := make([]engine.Trait, 0, 1)
+func (td *traitDictionary) GetTraitsImplementing(a *actor, i interface{}) []munfall.Trait {
+	out := make([]munfall.Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
 	for traitType, actorMap := range td.traits {
-		engine.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", a.GetActorID(), ":", actorMap)
+		munfall.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", a.GetActorID(), ":", actorMap)
 		traits, exists := actorMap[a.GetActorID()]
 		if exists && traitType.Implements(requiredType) {
 			for _, trait := range traits {
@@ -87,12 +87,12 @@ func (td *traitDictionary) GetTraitsImplementing(a *actor, i interface{}) []engi
 
 // GetAllTraitsImplementing gets all the traits that are in the dictionary
 // that implement the given interface.
-func (td *traitDictionary) GetAllTraitsImplementing(i interface{}) []engine.Trait {
-	out := make([]engine.Trait, 0, 1)
+func (td *traitDictionary) GetAllTraitsImplementing(i interface{}) []munfall.Trait {
+	out := make([]munfall.Trait, 0, 1)
 	requiredType := reflect.TypeOf(i).Elem()
-	engine.Logger.Debug("Check for traits implementing", requiredType)
+	munfall.Logger.Debug("Check for traits implementing", requiredType)
 	for traitType, actorMap := range td.traits {
-		engine.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", actorMap)
+		munfall.Logger.Debug(traitType, "->", requiredType, "=", traitType.Implements(requiredType), "_", actorMap)
 		if traitType.Implements(requiredType) {
 			for _, y := range actorMap {
 				out = append(out, y...)
@@ -100,6 +100,6 @@ func (td *traitDictionary) GetAllTraitsImplementing(i interface{}) []engine.Trai
 		}
 	}
 
-	engine.Logger.Debug(requiredType, ":=", out)
+	munfall.Logger.Debug(requiredType, ":=", out)
 	return out
 }

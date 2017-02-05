@@ -9,7 +9,7 @@ package graphics
 import (
 	"fmt"
 
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -23,20 +23,20 @@ type Window struct {
 func CreateWindow() *Window {
 	window := &Window{}
 
-	engine.Do(func() {
+	munfall.Do(func() {
 		var err error
 		if err = glfw.Init(); err != nil {
-			engine.Logger.Panic("Failed to initialize GLFW.")
+			munfall.Logger.Panic("Failed to initialize GLFW.")
 		}
 
 		window.inner, err = glfw.CreateWindow(800, 600, "Test", nil, nil)
 		if err != nil {
-			engine.Logger.Panic("Failed to create GLFW window: ", err)
+			munfall.Logger.Panic("Failed to create GLFW window: ", err)
 		}
 
 		window.inner.MakeContextCurrent()
 		if err = gl.Init(); err != nil {
-			engine.Logger.Panic("Failed to initialize OpenGL: ", err)
+			munfall.Logger.Panic("Failed to initialize OpenGL: ", err)
 		}
 		version := gl.GoStr(gl.GetString(gl.VERSION))
 		fmt.Println("OpenGL version", version)
@@ -54,7 +54,7 @@ func (w *Window) SetKeyCallback(f func(w *glfw.Window, key glfw.Key, code int, a
 
 // Clear clears the screen.
 func (w *Window) Clear() {
-	engine.Do(func() {
+	munfall.Do(func() {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 	})
 }
@@ -71,7 +71,7 @@ func (w *Window) PollEvents() {
 
 // SwapBuffers swaps the window buffers, should be called at the end of every render iteration.
 func (w *Window) SwapBuffers() {
-	engine.Do(func() {
+	munfall.Do(func() {
 		w.inner.SwapBuffers()
 	})
 }

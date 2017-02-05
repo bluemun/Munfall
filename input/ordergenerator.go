@@ -6,12 +6,12 @@
 package input
 
 import (
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // OrderGenerator issues orders based on input.
 type OrderGenerator interface {
-	GetOrders() []*engine.Order
+	GetOrders() []*munfall.Order
 	HandleKey(code int, state bool)
 	HandleMouseMove(x, y float32)
 	HandleMouseButton(button int)
@@ -20,17 +20,17 @@ type OrderGenerator interface {
 // ScriptableOrderGenerator an order generator implementation that allows you to
 // add hotkeys as orders that will be generated.
 type ScriptableOrderGenerator struct {
-	keyScripts map[int]map[bool]*engine.Order
-	orders     []*engine.Order
+	keyScripts map[int]map[bool]*munfall.Order
+	orders     []*munfall.Order
 }
 
 // CreateScriptableOrderGenerator creates a ScriptableOrderGenerator and initializes it.
 func CreateScriptableOrderGenerator() *ScriptableOrderGenerator {
-	return &ScriptableOrderGenerator{keyScripts: make(map[int]map[bool]*engine.Order, 0)}
+	return &ScriptableOrderGenerator{keyScripts: make(map[int]map[bool]*munfall.Order, 0)}
 }
 
 // GetOrders bla.
-func (s *ScriptableOrderGenerator) GetOrders() []*engine.Order {
+func (s *ScriptableOrderGenerator) GetOrders() []*munfall.Order {
 	x := s.orders
 	s.orders = nil
 	return x
@@ -42,7 +42,7 @@ func (s *ScriptableOrderGenerator) HandleKey(code int, state bool) {
 	if exists {
 		value, exists := codeMap[state]
 		if exists {
-			newValue := &engine.Order{Order: value.Order, Value: value.Value}
+			newValue := &munfall.Order{Order: value.Order, Value: value.Value}
 			s.orders = append(s.orders, newValue)
 		}
 	}
@@ -60,9 +60,9 @@ func (s *ScriptableOrderGenerator) HandleMouseButton(button int) {
 func (s *ScriptableOrderGenerator) AddKeyScript(code int, down bool, order string, value interface{}) {
 	codeMap, exists := s.keyScripts[code]
 	if !exists {
-		codeMap = make(map[bool]*engine.Order, 0)
+		codeMap = make(map[bool]*munfall.Order, 0)
 		s.keyScripts[code] = codeMap
 	}
 
-	codeMap[down] = &engine.Order{Order: order, Value: value}
+	codeMap[down] = &munfall.Order{Order: order, Value: value}
 }

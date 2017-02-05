@@ -6,7 +6,7 @@
 package traits
 
 import (
-	"github.com/bluemun/engine"
+	"github.com/bluemun/munfall"
 )
 
 // TraitTicker is a trait that gets called every time the world ticks.
@@ -16,5 +16,5 @@ type TraitTicker interface {
 
 // TraitOrderResolver used by traits to resolve orders sent by an order generator.
 type TraitOrderResolver interface {
-	ResolveOrder(order *engine.Order)
+	ResolveOrder(order *munfall.Order)
 }

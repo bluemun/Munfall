@@ -2,8 +2,8 @@
 // Use of this source code is governed by a MIT License
 // license that can be found in the LICENSE file.
 
-// Package engine interfaces.go Defines interfaces used to prevent circle imports.
-package engine
+// Package munfall interfaces.go Defines interfaces used to prevent circle imports.
+package munfall
 
 // Trait defines the interface used by every Trait that lives on an Actor.
 type Trait interface {
