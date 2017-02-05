@@ -14,6 +14,7 @@ import (
 	"github.com/bluemun/engine/graphics/render"
 	"github.com/bluemun/engine/input"
 	"github.com/bluemun/engine/logic"
+	"github.com/bluemun/engine/worldmap"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -27,10 +28,11 @@ type Game struct {
 	renderer       render.RendersTraits
 	window         *graphics.Window
 	world          engine.World
+	worldMap       worldmap.WorldMap
 }
 
 // Initialize initializes the game.
-func (g *Game) Initialize() {
+func (g *Game) Initialize(wm worldmap.WorldMap) {
 	if !mainHasRun {
 		mainHasRun = true
 		go func() {
@@ -45,6 +47,7 @@ func (g *Game) Initialize() {
 	g.Camera.Activate()
 
 	g.world = logic.CreateWorld()
+	g.worldMap = wm
 
 	// TODO: Change this once we got more renderers.
 	g.renderer = render.CreateRendersTraits2D(g.world)

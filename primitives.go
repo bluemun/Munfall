@@ -17,3 +17,27 @@ type Mesh struct {
 	Points    []float32
 	Triangles []uint32
 }
+
+// WPos world position.
+type WPos struct {
+	X, Y, Z float32
+}
+
+// Vector returns the vector between the two provided WPos
+func (w *WPos) Vector(other *WPos) *Vector3f {
+	return &Vector3f{
+		X: w.X - other.X,
+		Y: w.Y - other.Y,
+		Z: w.Z - other.Z,
+	}
+}
+
+// Vector3f holds 3 float values.
+type Vector3f struct {
+	X, Y, Z float32
+}
+
+// Vector2f holds 2 float values.
+type Vector2f struct {
+	X, Y float32
+}

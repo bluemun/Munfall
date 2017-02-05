@@ -18,3 +18,8 @@ type TraitAddedNotifier interface {
 type TraitRemovedNotifier interface {
 	NotifyRemoved(owner engine.Actor)
 }
+
+// MoveNotifier is called when an Actor is moved on the map.
+type MoveNotifier interface {
+	NotifyMove(old, new *engine.WPos)
+}

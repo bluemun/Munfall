@@ -5,9 +5,10 @@
 // Package engine interfaces.go Defines interfaces used to prevent circle imports.
 package engine
 
-// Trait defines the interface that is used for marking Traits.
+// Trait defines the interface used by every Trait that lives on an Actor.
 type Trait interface {
 	Initialize(World, Actor, map[string]interface{})
+	Owner() Actor
 }
 
 // World defines the interface for the world struct.
@@ -21,8 +22,14 @@ type World interface {
 	Tick(deltaUnit float32)
 }
 
+// WorldTrait defines the interface used by every Trait that lives on a World.
+type WorldTrait interface {
+	Initialize(World, map[string]interface{})
+}
+
 // Actor defines the interface for the actor struct.
 type Actor interface {
+	Pos() *WPos
 	World() World
 	GetActorID() uint
 }
