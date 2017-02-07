@@ -79,10 +79,12 @@ type Space interface {
 
 // Actor defines the interface for the actor struct.
 type Actor interface {
+	ActorID() uint
+	Kill()
+	IsDead() bool
 	Pos() *WPos
 	SetPos(pos *WPos)
 	World() World
-	ActorID() uint
 }
 
 // Renderable interface used to pass data to a renderer.

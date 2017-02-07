@@ -104,6 +104,7 @@ func (wm *worldMap2DGrid) CreatePath(positions []*munfall.WPos) munfall.Path {
 }
 
 func (wm *worldMap2DGrid) GetPath(a munfall.Actor, p1, p2 *munfall.WPos) munfall.Path {
+	munfall.Logger.Info(a.ActorID(), p1, p2)
 	path := &path2DGrid{
 		m:    wm,
 		cell: wm.CellAt(wm.ConvertToMPos(p1)).(*cell2DRectGrid),
@@ -135,9 +136,7 @@ Outer:
 		}
 	}
 
-	if intersects {
-		path.last = path
-	} else {
+	if !intersects {
 		path.last = &path2DGrid{
 			m:     wm,
 			cell:  lastCell,
@@ -145,6 +144,8 @@ Outer:
 		}
 		path.last.last = path.last
 		path.next = path.last
+	} else {
+		path.last = path
 	}
 
 	return path
@@ -183,12 +184,14 @@ func (wm *worldMap2DGrid) Register(a munfall.Actor) {
 }
 
 func (wm *worldMap2DGrid) Move(a munfall.Actor, p munfall.Path, percent float32) {
+	old := a.Pos()
 	path, exists := p.(*path2DGrid)
 	if !exists {
 		munfall.Logger.Panic("Tried using", p, "on a GridWorldMap, it requires a *path2DGrid type.")
 	}
 
-	for _, trait := range wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil)) {
+	spacetraits := wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil))
+	for _, trait := range spacetraits {
 		os := trait.(traits.OccupySpace)
 		for _, space := range os.Space() {
 			cell := wm.CellAt(wm.ConvertToMPos(space.Offset())).(*cell2DRectGrid)
@@ -198,12 +201,16 @@ func (wm *worldMap2DGrid) Move(a munfall.Actor, p munfall.Path, percent float32)
 
 	a.SetPos(path.WPos(percent))
 
-	for _, trait := range wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil)) {
+	for _, trait := range spacetraits {
 		os := trait.(traits.OccupySpace)
 		for _, space := range os.Space() {
 			cell := wm.CellAt(wm.ConvertToMPos(space.Offset())).(*cell2DRectGrid)
 			cell.AddSpace(space)
 		}
+	}
+
+	for _, trait := range wm.world.GetTraitsImplementing(a, (*traits.MoveNotifier)(nil)) {
+		trait.(traits.MoveNotifier).NotifyMove(old, a.Pos())
 	}
 }
 

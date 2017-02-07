@@ -78,7 +78,6 @@ func (w *world) Tick(deltaUnit float32) {
 func (w *world) AddToWorld(a munfall.Actor) {
 	actor := a.(*actor)
 	w.actors[a.ActorID()] = actor
-
 	w.wm.Register(a)
 	notify := w.GetTraitsImplementing(a, (*traits.TraitAddedToWorldNotifier)(nil))
 	for _, trait := range notify {

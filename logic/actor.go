@@ -14,6 +14,7 @@ type actor struct {
 	actorID uint
 	world   *world
 	pos     *munfall.WPos
+	dead    bool
 }
 
 // World returns the world that this actor currently resides in.
@@ -32,4 +33,12 @@ func (a *actor) Pos() *munfall.WPos {
 
 func (a *actor) SetPos(pos *munfall.WPos) {
 	a.pos = pos
+}
+
+func (a *actor) Kill() {
+	a.dead = true
+}
+
+func (a *actor) IsDead() bool {
+	return a.dead
 }

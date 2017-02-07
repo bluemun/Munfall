@@ -13,34 +13,40 @@ import (
 
 // ActorDefinition holds all the information needed to make an Actor.
 type ActorDefinition struct {
-	Name       string
-	parameters map[string]map[string]interface{}
+	Name   string
+	traits []*TraitDefinition
+}
+
+// TraitDefinition used for constructing a trait.
+type TraitDefinition struct {
+	Type       string
+	parameters map[string]interface{}
+}
+
+// CreateTraitDefinition creates a struct for creating traits.
+func CreateTraitDefinition(Type string) *TraitDefinition {
+	return &TraitDefinition{
+		Type:       Type,
+		parameters: make(map[string]interface{}),
+	}
+}
+
+// AddParameter adds a parameter to the trait, returns the definintion it is called
+// on for easy chaining.
+func (td *TraitDefinition) AddParameter(parameterName string, value interface{}) *TraitDefinition {
+	td.parameters[parameterName] = value
+	return td
 }
 
 // CreateActorDefinition creates a new actor definition, initialzed with the given name.
 func CreateActorDefinition(name string) *ActorDefinition {
-	return &ActorDefinition{Name: name, parameters: make(map[string]map[string]interface{})}
+	return &ActorDefinition{Name: name, traits: make([]*TraitDefinition, 0)}
 }
 
 // AddTrait adds a trait that will be constructed and added to the actor
 // when this ActorDefinition is used to create an actor.
-func (ad *ActorDefinition) AddTrait(traitName string) {
-	_, exists := ad.parameters[traitName]
-	if !exists {
-		ad.parameters[traitName] = make(map[string]interface{}, 1)
-	}
-}
-
-// AddParameter adds a parameter for the given trait that is provided to it every
-// time this ActorDefinition is used to create an actor.
-func (ad *ActorDefinition) AddParameter(traitName, parameterName string, value interface{}) {
-	traitParams, exists := ad.parameters[traitName]
-	if !exists {
-		munfall.Logger.Panic("Tried adding a parameter to trait", traitName,
-			"on ActorDefinition", ad.Name, ": ActorDefinition does not define", traitName)
-	}
-
-	traitParams[parameterName] = value
+func (ad *ActorDefinition) AddTrait(def *TraitDefinition) {
+	ad.traits = append(ad.traits, def)
 }
 
 // TraitCreate holds all the information needed to create a trait.
@@ -73,18 +79,18 @@ func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]i
 	world := w.(*world)
 	params := ar.builders[name]
 
-	a := &actor{actorID: ar.nextID, world: world}
+	a := &actor{actorID: ar.nextID, pos: &munfall.WPos{}, world: world}
 	ar.nextID++
 
-	for n, parameter := range params.parameters {
-		obj := reflect.New(ar.definitions[n])
+	for _, traitdef := range params.traits {
+		obj := reflect.New(ar.definitions[traitdef.Type])
 		trait := obj.Interface().(munfall.Trait)
 
 		if runtimeParameters == nil {
-			trait.Initialize(w, a, parameter)
+			trait.Initialize(w, a, traitdef.parameters)
 		} else {
-			np := make(map[string]interface{}, len(runtimeParameters)+len(parameter))
-			for key, value := range parameter {
+			np := make(map[string]interface{}, len(runtimeParameters)+len(traitdef.parameters))
+			for key, value := range traitdef.parameters {
 				np[key] = value
 			}
 
