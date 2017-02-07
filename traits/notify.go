@@ -9,16 +9,16 @@ import (
 	"github.com/bluemun/munfall"
 )
 
-// TraitAddedNotifier is a trait that gets notified when it is added to the world.
-type TraitAddedNotifier interface {
+// TraitAddedToWorldNotifier is a trait that gets notified when it is added to the world.
+type TraitAddedToWorldNotifier interface {
 	munfall.Trait
-	NotifyAdded(owner munfall.Actor)
+	NotifyAddedToWorld()
 }
 
-// TraitRemovedNotifier is a trait that gets notified when it is removed from the world.
-type TraitRemovedNotifier interface {
+// TraitRemovedFromWorldNotifier is a trait that gets notified when it is removed from the world.
+type TraitRemovedFromWorldNotifier interface {
 	munfall.Trait
-	NotifyRemoved(owner munfall.Actor)
+	NotifyRemovedFromWorld()
 }
 
 // MoveNotifier is called when an Actor is moved on the map.

@@ -33,6 +33,9 @@ type World interface {
 type WorldMap interface {
 	Initialize(World)
 
+	Width() float32
+	Height() float32
+
 	InsideMapWPos(pos *WPos) bool
 	InsideMapMPos(pos *MPos) bool
 

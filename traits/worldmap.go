@@ -40,8 +40,6 @@ func (s *SpaceCell) Intersects(other munfall.Space, offset *munfall.WPos) bool {
 
 	mpos1 := s.trait.Owner().World().WorldMap().ConvertToMPos(s.Offset().Add(offset))
 	mpos2 := s.trait.Owner().World().WorldMap().ConvertToMPos(other.Offset())
-	munfall.Logger.Info("first:", s.Offset().Add(offset), other.Offset(), offset)
-	munfall.Logger.Info("second:", mpos1, mpos2)
 	return *mpos1 == *mpos2
 }
 
@@ -51,4 +49,5 @@ type OccupySpace interface {
 	munfall.Trait
 	Intersects(OccupySpace, *munfall.WPos) bool
 	Space() []munfall.Space
+	OutOfBounds(*munfall.WPos) bool
 }

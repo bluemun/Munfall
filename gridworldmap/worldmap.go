@@ -59,6 +59,14 @@ func CreateGridWorldMap(width, height uint, cellWidth, cellHeight float32) munfa
 	}
 }
 
+func (wm *worldMap2DGrid) Width() float32 {
+	return float32(wm.width) * wm.cWidth
+}
+
+func (wm *worldMap2DGrid) Height() float32 {
+	return float32(wm.height) * wm.cHeight
+}
+
 func (wm *worldMap2DGrid) Initialize(world munfall.World) {
 	wm.world = world
 }
@@ -103,27 +111,31 @@ func (wm *worldMap2DGrid) GetPath(a munfall.Actor, p1, p2 *munfall.WPos) munfall
 	path.first = path
 
 	lastCell := wm.CellAt(wm.ConvertToMPos(p2)).(*cell2DRectGrid)
+
 	ts := wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil))
+	offset := p2.Subtract(p1)
 	intersects := false
 Outer:
 	for _, trait := range ts {
 		os := trait.(traits.OccupySpace)
-		for _, space := range lastCell.Space() {
-			spacetrait := space.Trait().(traits.OccupySpace)
-			munfall.Logger.Info(p1, p2)
-			munfall.Logger.Info(os.Owner().Pos(), spacetrait.Owner().Pos())
-			munfall.Logger.Info(spacetrait.Owner().ActorID(), os.Owner().ActorID(), os.Intersects(spacetrait, p2.Subtract(p1)))
-			if spacetrait.Owner().ActorID() != os.Owner().ActorID() && os.Intersects(spacetrait, p2.Subtract(p1)) {
-				intersects = true
-				break Outer
+		if os.OutOfBounds(offset) {
+			path.last = path
+			return path
+		}
+
+		for _, osspace := range os.Space() {
+			cell := wm.CellAt(wm.ConvertToMPos(osspace.Offset().Add(offset)))
+			for _, space := range cell.Space() {
+				spacetrait := space.Trait().(traits.OccupySpace)
+				if spacetrait.Owner().ActorID() != os.Owner().ActorID() && os.Intersects(spacetrait, offset) {
+					intersects = true
+					break Outer
+				}
 			}
 		}
 	}
 
-	munfall.Logger.Info("----------")
-
-	if lastCell == path.cell || intersects {
-		munfall.Logger.Info("Test")
+	if intersects {
 		path.last = path
 	} else {
 		path.last = &path2DGrid{
@@ -303,8 +315,10 @@ func (c *cell2DRectGrid) RemoveSpace(s munfall.Space) {
 
 	if index == -1 {
 		return
-	} else if length == 1 {
-		c.space = make([]munfall.Space, 0)
+	} else if index == 0 {
+		c.space = c.space[1:]
+	} else if index+1 == length {
+		c.space = c.space[:index]
 	} else {
 		c.space = append(c.space[:index-1], c.space[index+1:]...)
 	}

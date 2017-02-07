@@ -80,9 +80,9 @@ func (w *world) AddToWorld(a munfall.Actor) {
 	w.actors[a.ActorID()] = actor
 
 	w.wm.Register(a)
-	notify := w.GetTraitsImplementing(a, (*traits.TraitAddedNotifier)(nil))
+	notify := w.GetTraitsImplementing(a, (*traits.TraitAddedToWorldNotifier)(nil))
 	for _, trait := range notify {
-		trait.(traits.TraitAddedNotifier).NotifyAdded((munfall.Actor)(a))
+		trait.(traits.TraitAddedToWorldNotifier).NotifyAddedToWorld()
 	}
 }
 
@@ -92,9 +92,9 @@ func (w *world) RemoveFromWorld(a munfall.Actor) {
 	}
 
 	w.wm.Deregister(a)
-	notify := w.traitDictionary.GetTraitsImplementing(a.(*actor), (*traits.TraitRemovedNotifier)(nil))
+	notify := w.traitDictionary.GetTraitsImplementing(a.(*actor), (*traits.TraitRemovedFromWorldNotifier)(nil))
 	for _, trait := range notify {
-		trait.(traits.TraitRemovedNotifier).NotifyRemoved(a)
+		trait.(traits.TraitRemovedFromWorldNotifier).NotifyRemovedFromWorld()
 	}
 }
 
