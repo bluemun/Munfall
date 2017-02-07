@@ -57,8 +57,6 @@ func (td *traitDictionary) removeActor(a *actor) {
 // panics if the trait doesn't exist.
 func (td *traitDictionary) GetTrait(a *actor, i interface{}) munfall.Trait {
 	t := reflect.TypeOf(i)
-	munfall.Logger.Info(td.traits[t])
-	munfall.Logger.Info(a.ActorID())
 	traits, exists := td.traits[t][a.ActorID()]
 	if !exists || len(traits) != 1 {
 		munfall.Logger.Panic("Trait", t, "doesnt exist on actor", a.ActorID())

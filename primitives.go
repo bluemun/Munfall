@@ -6,6 +6,10 @@
 // they are here to prevent circle imports.
 package munfall
 
+import (
+	"math"
+)
+
 // Order wraps an order that gets passed around by the order generator.
 type Order struct {
 	Order    string
@@ -29,7 +33,7 @@ type WPos struct {
 	X, Y, Z float32
 }
 
-// Add returns a WPos that is the sup of the 2 given WPos.
+// Add returns a WPos that is the sum of the 2 given WPos.
 func (w *WPos) Add(other *WPos) *WPos {
 	return &WPos{
 		X: w.X + other.X,
@@ -38,18 +42,22 @@ func (w *WPos) Add(other *WPos) *WPos {
 	}
 }
 
-// Vector returns the vector between the two provided WPos
-func (w *WPos) Vector(other *WPos) *Vector3f {
-	return &Vector3f{
+// Subtract returns a WPos that is the difference of the 2 given WPos.
+func (w *WPos) Subtract(other *WPos) *WPos {
+	return &WPos{
 		X: w.X - other.X,
 		Y: w.Y - other.Y,
 		Z: w.Z - other.Z,
 	}
 }
 
-// Vector3f holds 3 float values.
-type Vector3f struct {
-	X, Y, Z float32
+// Clamp clamps the WPos to the given vector values.
+func (w *WPos) Clamp(low, high *WPos) *WPos {
+	return &WPos{
+		X: float32(math.Min(math.Max(float64(w.X), float64(low.X)), float64(high.X))),
+		Y: float32(math.Min(math.Max(float64(w.Y), float64(low.Y)), float64(high.Y))),
+		Z: float32(math.Min(math.Max(float64(w.Z), float64(low.Z)), float64(high.Z))),
+	}
 }
 
 // Vector2f holds 2 float values.

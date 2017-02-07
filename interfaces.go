@@ -37,7 +37,7 @@ type WorldMap interface {
 	InsideMapMPos(pos *MPos) bool
 
 	CellAt(*MPos) Cell
-	GetPath(a Actor, p1, p2 *MPos) Path
+	GetPath(a Actor, p1, p2 *WPos) Path
 
 	ConvertToWPos(*MPos) *WPos
 	ConvertToMPos(*WPos) *MPos
@@ -71,7 +71,7 @@ type Space interface {
 	Trait() Trait
 	Initialize(Trait)
 	Offset() *WPos
-	Intersects(other Space) bool
+	Intersects(Space, *WPos) bool
 }
 
 // Actor defines the interface for the actor struct.

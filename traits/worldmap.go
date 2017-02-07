@@ -33,9 +33,15 @@ func (s *SpaceCell) Offset() *munfall.WPos {
 }
 
 // Intersects returns if the two spaces intersect.
-func (s *SpaceCell) Intersects(other munfall.Space) bool {
-	mpos1 := s.trait.Owner().World().WorldMap().ConvertToMPos(s.Offset())
+func (s *SpaceCell) Intersects(other munfall.Space, offset *munfall.WPos) bool {
+	if offset == nil {
+		offset = &munfall.WPos{}
+	}
+
+	mpos1 := s.trait.Owner().World().WorldMap().ConvertToMPos(s.Offset().Add(offset))
 	mpos2 := s.trait.Owner().World().WorldMap().ConvertToMPos(other.Offset())
+	munfall.Logger.Info("first:", s.Offset().Add(offset), other.Offset(), offset)
+	munfall.Logger.Info("second:", mpos1, mpos2)
 	return *mpos1 == *mpos2
 }
 
@@ -43,6 +49,6 @@ func (s *SpaceCell) Intersects(other munfall.Space) bool {
 // other actors that have an OccupySpace trait.
 type OccupySpace interface {
 	munfall.Trait
-	Intersects(OccupySpace) bool
+	Intersects(OccupySpace, *munfall.WPos) bool
 	Space() []munfall.Space
 }

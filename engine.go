@@ -6,6 +6,7 @@
 package munfall
 
 import (
+	"reflect"
 	"time"
 
 	"github.com/op/go-logging"
@@ -38,4 +39,10 @@ func Do(f func()) {
 		done <- true
 	}
 	<-done
+}
+
+// IsNil checks if the given interface is nil, also works on nil interface pointers.
+func IsNil(a interface{}) bool {
+	defer func() { recover() }()
+	return a == nil || reflect.ValueOf(a).IsNil()
 }

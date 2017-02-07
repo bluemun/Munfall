@@ -76,10 +76,8 @@ func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]i
 	a := &actor{actorID: ar.nextID, world: world}
 	ar.nextID++
 
-	for name, parameter := range params.parameters {
-		obj := reflect.New(ar.definitions[name])
-
-		//munfall.Logger.Info(obj)
+	for n, parameter := range params.parameters {
+		obj := reflect.New(ar.definitions[n])
 		trait := obj.Interface().(munfall.Trait)
 
 		if runtimeParameters == nil {

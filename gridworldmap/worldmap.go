@@ -21,7 +21,7 @@ type worldMap2DGrid struct {
 
 // CreateGridWorldMap creates a 2D implementation of a munfall.
 func CreateGridWorldMap(width, height uint, cellWidth, cellHeight float32) munfall.WorldMap {
-	grid := make([]*cell2DRectGrid, 0, width*height)
+	grid := make([]*cell2DRectGrid, width*height)
 
 	var init uint
 	for y := init; y < height; y++ {
@@ -95,14 +95,14 @@ func (wm *worldMap2DGrid) CreatePath(positions []*munfall.WPos) munfall.Path {
 	return path.First()
 }
 
-func (wm *worldMap2DGrid) GetPath(a munfall.Actor, p1, p2 *munfall.MPos) munfall.Path {
+func (wm *worldMap2DGrid) GetPath(a munfall.Actor, p1, p2 *munfall.WPos) munfall.Path {
 	path := &path2DGrid{
 		m:    wm,
-		cell: wm.CellAt(p1).(*cell2DRectGrid),
+		cell: wm.CellAt(wm.ConvertToMPos(p1)).(*cell2DRectGrid),
 	}
 	path.first = path
 
-	lastCell := wm.CellAt(p2).(*cell2DRectGrid)
+	lastCell := wm.CellAt(wm.ConvertToMPos(p2)).(*cell2DRectGrid)
 	ts := wm.world.GetTraitsImplementing(a, (*traits.OccupySpace)(nil))
 	intersects := false
 Outer:
@@ -110,14 +110,20 @@ Outer:
 		os := trait.(traits.OccupySpace)
 		for _, space := range lastCell.Space() {
 			spacetrait := space.Trait().(traits.OccupySpace)
-			if spacetrait.Owner().ActorID() != os.Owner().ActorID() && os.Intersects(spacetrait) {
+			munfall.Logger.Info(p1, p2)
+			munfall.Logger.Info(os.Owner().Pos(), spacetrait.Owner().Pos())
+			munfall.Logger.Info(spacetrait.Owner().ActorID(), os.Owner().ActorID(), os.Intersects(spacetrait, p2.Subtract(p1)))
+			if spacetrait.Owner().ActorID() != os.Owner().ActorID() && os.Intersects(spacetrait, p2.Subtract(p1)) {
 				intersects = true
 				break Outer
 			}
 		}
 	}
 
+	munfall.Logger.Info("----------")
+
 	if lastCell == path.cell || intersects {
+		munfall.Logger.Info("Test")
 		path.last = path
 	} else {
 		path.last = &path2DGrid{
@@ -147,7 +153,11 @@ func (wm *worldMap2DGrid) ConvertToWPos(m *munfall.MPos) *munfall.WPos {
 }
 
 func (wm *worldMap2DGrid) ConvertToMPos(w *munfall.WPos) *munfall.MPos {
-	return &munfall.MPos{X: uint(w.X / wm.cWidth), Y: uint(w.Y / wm.cHeight)}
+	low := munfall.WPos{}
+	high := munfall.WPos{X: wm.cWidth * float32(wm.width), Y: wm.cHeight * float32(wm.height)}
+	realw := w.Clamp(&low, &high)
+	npos := &munfall.MPos{X: uint(realw.X / wm.cWidth), Y: uint(realw.Y / wm.cHeight)}
+	return npos
 }
 
 func (wm *worldMap2DGrid) Register(a munfall.Actor) {
@@ -214,15 +224,12 @@ func (p *path2DGrid) MPos() *munfall.MPos {
 
 func (p *path2DGrid) WPos(percent float32) *munfall.WPos {
 	start := p.m.ConvertToWPos(p.cell.pos)
-	next := p.m.ConvertToWPos(p.next.cell.pos)
-	movement := start.Vector(next)
-
-	// TODO: Implement a heightmap somewhere so we can give a real z value here.
-	return &munfall.WPos{
-		X: start.X + movement.X*percent,
-		Y: start.Y * movement.Y * percent,
-		Z: 0,
+	if p.next == nil {
+		return start
 	}
+
+	next := p.m.ConvertToWPos(p.next.cell.pos)
+	return start.Subtract(next)
 }
 
 func (p *path2DGrid) IsEnd() bool {
