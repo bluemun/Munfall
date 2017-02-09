@@ -82,6 +82,7 @@ type Actor interface {
 	ActorID() uint
 	Kill()
 	IsDead() bool
+	IsInWorld() bool
 	Pos() *WPos
 	SetPos(pos *WPos)
 	World() World

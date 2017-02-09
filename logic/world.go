@@ -77,6 +77,7 @@ func (w *world) Tick(deltaUnit float32) {
 
 func (w *world) AddToWorld(a munfall.Actor) {
 	actor := a.(*actor)
+	actor.inworld = true
 	w.actors[a.ActorID()] = actor
 	w.wm.Register(a)
 	notify := w.GetTraitsImplementing(a, (*traits.TraitAddedToWorldNotifier)(nil))
@@ -90,11 +91,16 @@ func (w *world) RemoveFromWorld(a munfall.Actor) {
 		panic("Trying to remove nil as an Actor!")
 	}
 
+	a.(*actor).inworld = false
 	w.wm.Deregister(a)
 	notify := w.traitDictionary.GetTraitsImplementing(a.(*actor), (*traits.TraitRemovedFromWorldNotifier)(nil))
 	for _, trait := range notify {
 		trait.(traits.TraitRemovedFromWorldNotifier).NotifyRemovedFromWorld()
 	}
+}
+
+func (w *world) cleanTraits(a munfall.Actor) {
+	w.traitDictionary.removeActor(a.(*actor))
 }
 
 func (w *world) WorldMap() munfall.WorldMap {

@@ -49,6 +49,7 @@ func (td *traitDictionary) addTrait(a *actor, t munfall.Trait) {
 
 func (td *traitDictionary) removeActor(a *actor) {
 	for _, at := range td.traits {
+		munfall.Logger.Info("Deleted", a.ActorID(), at)
 		delete(at, a.ActorID())
 	}
 }

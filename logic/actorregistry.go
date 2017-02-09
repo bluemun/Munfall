@@ -113,8 +113,7 @@ func (ar *ActorRegistry) CreateActor(name string, runtimeParameters map[string]i
 
 // DisposeActor disposes of all the traits from the world.
 func (ar *ActorRegistry) DisposeActor(a munfall.Actor, w munfall.World) {
-	world := w.(*world)
-	world.RemoveFromWorld(a)
+	w.(*world).cleanTraits(a)
 }
 
 // RegisterTrait adds a trait type as a candidate for creation, panics if it already exists.

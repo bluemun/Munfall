@@ -104,12 +104,16 @@ func (wm *worldMap2DGrid) CreatePath(positions []*munfall.WPos) munfall.Path {
 }
 
 func (wm *worldMap2DGrid) GetPath(a munfall.Actor, p1, p2 *munfall.WPos) munfall.Path {
-	munfall.Logger.Info(a.ActorID(), p1, p2)
 	path := &path2DGrid{
 		m:    wm,
 		cell: wm.CellAt(wm.ConvertToMPos(p1)).(*cell2DRectGrid),
 	}
 	path.first = path
+
+	if p2.X < 0 || p2.Y < 0 || p2.X > (float32)(wm.width)*wm.cWidth || p2.Y > (float32)(wm.height)*wm.cHeight {
+		path.last = path
+		return path
+	}
 
 	lastCell := wm.CellAt(wm.ConvertToMPos(p2)).(*cell2DRectGrid)
 
@@ -145,6 +149,7 @@ Outer:
 		path.last.last = path.last
 		path.next = path.last
 	} else {
+		munfall.Logger.Debug("Intersection happened", path.MPos())
 		path.last = path
 	}
 
@@ -247,8 +252,11 @@ func (p *path2DGrid) WPos(percent float32) *munfall.WPos {
 		return start
 	}
 
-	next := p.m.ConvertToWPos(p.next.cell.pos)
-	return start.Subtract(next)
+	offset := start.Subtract(p.m.ConvertToWPos(p.next.cell.pos))
+	offset.X *= percent
+	offset.Y *= percent
+	offset.Z *= percent
+	return start.Add(offset)
 }
 
 func (p *path2DGrid) IsEnd() bool {

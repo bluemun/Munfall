@@ -11,10 +11,10 @@ import (
 
 // Actor temp
 type actor struct {
-	actorID uint
-	world   *world
-	pos     *munfall.WPos
-	dead    bool
+	actorID       uint
+	world         *world
+	pos           *munfall.WPos
+	dead, inworld bool
 }
 
 // World returns the world that this actor currently resides in.
@@ -37,8 +37,13 @@ func (a *actor) SetPos(pos *munfall.WPos) {
 
 func (a *actor) Kill() {
 	a.dead = true
+	a.world.RemoveFromWorld(a)
 }
 
 func (a *actor) IsDead() bool {
 	return a.dead
+}
+
+func (a *actor) IsInWorld() bool {
+	return a.inworld
 }
